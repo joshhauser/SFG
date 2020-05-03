@@ -1,6 +1,9 @@
 #ifndef DISK_H
 #define DISK_H
 
+// Preproc consts
+#define BLOCK_SIZE 1024
+
 // Enums ================
 typedef enum fileType_e {
   TEXT,
