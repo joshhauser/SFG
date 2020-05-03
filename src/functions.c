@@ -4,12 +4,13 @@
 #include "functions.h"
 
 
-
-char ** splitStr(char * string, const char * delimiter, int * i) {
+/* Search delimiter as a substring of "string" to cut main string
+into tokens, and use bufferSize to count tokens */
+char ** splitStr(char * string, const char * delimiter, int * bufferSize) {
   char ** buffer = malloc(0);
 
   // Buffer's index
-  *i = 0;
+  *bufferSize = 0;
   // Index for delimiter search
   int j;
   // Delimiter's index
@@ -36,35 +37,39 @@ char ** splitStr(char * string, const char * delimiter, int * i) {
       delimPos++;
     }
 
+    // If all delimiter's chars have been found
     if (delimPos == (delimiterSize - 1)) {
       int k = 0;
-       (*i)++;
+      (*bufferSize)++;
 
       // Dynamic realloc
-      buffer = (char**) realloc(buffer, *i * sizeof(char*));
+      buffer = (char**) realloc(buffer, (*bufferSize) * sizeof(char*));
+
+      // Copy each token's char into token's array
       while (k < strPos) {
-        token = (char*) realloc(token,(k+1) * sizeof(char));
+        token = (char*) realloc(token, (k+1) * sizeof(char));
         token[k] = string[k];
-        printf("tk: %c\n", token[k]);
         k++;
       }
-      printf("%s\n", token);
-     
-
+  
       k = 0;
       j++;
       
+      // Shift other string's chars to the left
       while (j < strlen(string) && string[j] != '\0') {
         string[k] = string[j];        
         j++;
         k++;
       }
+
+      // Delete useless chars at the end of the string
       string[k] = '\0';
-      buffer[(*i)-1] = token;
-      printf("valeur de i: %d\n", *i);
-      printf("lecture du buffer dans la case %d: %s\n", *i, buffer[(*i)-1]);
+      // Add the token to the buffer's array
+      buffer[(*bufferSize)-1] = token;
+      printf("valeur de i: %d\n", (*bufferSize));
+      printf("lecture du buffer dans la case %d: %s\n", (*bufferSize), buffer[(*bufferSize)-1]);
+      // Reset position in main string
       strPos = 0;
-      
     }
     else {
       strPos++;
