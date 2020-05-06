@@ -1,7 +1,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
-#include "functions.h"
+#include "../headers/functions.h"
 
 
 /* Search delimiter as a substring of "string" to cut main string

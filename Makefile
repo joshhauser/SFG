@@ -18,11 +18,11 @@ all: $(EXEC)
 
 # Create executable file with all objects files + main.c
 $(EXEC): $(OBJ)
-	$(CC) $(CFLAGS) main.c $^ -o $@
+	$(CC) $(CFLAGS) main.c $^ -o $@ -g 
 
 # Create each object file with its source file
 %.o: $(SRCDIR)/%.c
-	$(CC) $(CFLAGS) -Iheaders -c $< -o $@
+	$(CC) $(CFLAGS) -Iheaders -c $< -o $@ -g
 
 # Delete objects file
 clean:

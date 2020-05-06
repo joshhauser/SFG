@@ -2,14 +2,17 @@
 #define DISK_H
 
 // Preproc consts
-#define BLOCK_SIZE 1024
+#define BLOCK_SIZE 1048576
+#define INODES_COUNT 50
+#define BLOCKS_COUNT 150
+#define MAIN_FOLDER "/home/"
 
 // Enums ================
-typedef enum fileType_e {
+/* typedef enum fileType_e {
   TEXT,
   BINARY, 
   FOLDER
-} fileType_e;
+} fileType_e; */
 
 typedef enum accessMode_e {
   R, // read
@@ -23,24 +26,23 @@ typedef enum accessMode_e {
 about a file (ordinary file or folder) */
 typedef struct inode_t {
   unsigned int id;
-  unsigned int size;
-  fileType_e fileType;
-  unsigned char rights[8];
-  int usedBlocks[150];
+  char fileName[100];
+  char rights[10];
+  int usedBlocks[BLOCKS_COUNT];
 } inode_t;
 
-/* A block is a section of a dosk which contains datas */
+/* A block is a section of a disk which contains datas */
 typedef char block_t[1048576];
 
 // Disk
 typedef struct disk_t {
-  inode_t inodes[50];
-  block_t blocks[150];
+  inode_t inodes[INODES_COUNT];
+  block_t blocks[BLOCKS_COUNT];
 } disk_t;
 
-// Couple filename + inode
+// Couple fileName + inode
 typedef struct fileID_t {
-  char filename;
+  char fileName;
   inode_t inode;
 } fileID_t;
 
@@ -59,5 +61,13 @@ typedef struct file_t {
 
 // Functions
 void initDisk();
+void initDiskContent();
+void saveDisk();
+void nstdError(const char *format, ...);
+
+int fileExists(char * fileName, char fileType, char * folderContent);
+
+inode_t createFile(char * name, char fileType);
+
 
 #endif
