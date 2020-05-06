@@ -7,10 +7,10 @@
 /* Search delimiter as a substring of "string" to cut main string
 into tokens, and use bufferSize to count tokens */
 char ** splitStr(char * string, const char * delimiter, int * bufferSize) {
-  char ** buffer = malloc(0);
+  char ** buffer = malloc(sizeof(char));
 
   // Buffer's index
-  *bufferSize = 0;
+  *bufferSize = 1;
   // Index for delimiter search
   int j;
   // Delimiter's index
@@ -21,13 +21,12 @@ char ** splitStr(char * string, const char * delimiter, int * bufferSize) {
   int delimiterSize = strlen(delimiter);
 
   // While string is not empty
-  while (strlen(string) != 0 && string[0] != '\0') {
+  while (strlen(string) != 0 && string[0] != '\0' && strPos < strlen(string)) {
     // Token
-    char * token = malloc(0);
-   
-    // Increase strPos until first char of delimiter is encountered
-    while (string[strPos] != delimiter[0]) strPos++;
+    char * token = malloc(sizeof(char));
 
+    // Increase strPos until first char of delimiter is encountered
+    while (string[strPos] != delimiter[0] && strPos < strlen(string)) strPos++;
     j = strPos;
     delimPos = 0;
 
@@ -40,6 +39,7 @@ char ** splitStr(char * string, const char * delimiter, int * bufferSize) {
     // If all delimiter's chars have been found
     if (delimPos == (delimiterSize - 1)) {
       int k = 0;
+      printf("founded\n");
       (*bufferSize)++;
 
       // Dynamic realloc
@@ -51,6 +51,7 @@ char ** splitStr(char * string, const char * delimiter, int * bufferSize) {
         token[k] = string[k];
         k++;
       }
+      
   
       k = 0;
       j++;
@@ -61,21 +62,29 @@ char ** splitStr(char * string, const char * delimiter, int * bufferSize) {
         j++;
         k++;
       }
-
+    
       // Delete useless chars at the end of the string
       string[k] = '\0';
+
       // Add the token to the buffer's array
-      buffer[(*bufferSize)-1] = token;
-      printf("valeur de i: %d\n", (*bufferSize));
-      printf("lecture du buffer dans la case %d: %s\n", (*bufferSize), buffer[(*bufferSize)-1]);
+      buffer[(*bufferSize)-2] = token;
+
+      //printf("valeur de i: %d\n", (*bufferSize));
+      //printf("lecture du buffer dans la case %d: %s\n", (*bufferSize), buffer[(*bufferSize)-1]);
+
       // Reset position in main string
       strPos = 0;
     }
-    else {
+    else  {
       strPos++;
     }
+   
   }
 
+
+    buffer[(*bufferSize)-1] = (char*) malloc((strlen(string) + 1) * sizeof(char));
+    buffer[(*bufferSize)-1] = string;
+  
   return buffer;
 }
 

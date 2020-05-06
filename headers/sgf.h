@@ -27,7 +27,7 @@ about a file (ordinary file or folder) */
 typedef struct inode_t {
   unsigned int id;
   char fileName[100];
-  char rights[10];
+  char rights[3];
   int usedBlocks[BLOCKS_COUNT];
 } inode_t;
 
@@ -40,7 +40,7 @@ typedef struct disk_t {
   block_t blocks[BLOCKS_COUNT];
 } disk_t;
 
-// Couple fileName + inode
+// Pair fileName + inode
 typedef struct fileID_t {
   char fileName;
   inode_t inode;
@@ -64,6 +64,7 @@ void initDisk();
 void initDiskContent();
 void saveDisk();
 void nstdError(const char *format, ...);
+void testContent();
 
 int fileExists(char * fileName, char fileType, char * folderContent);
 

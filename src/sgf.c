@@ -13,6 +13,8 @@ char * currentFolder = MAIN_FOLDER;
 int availableBlocks = BLOCKS_COUNT;
 int availableInodes = INODES_COUNT;
 
+
+// Init the disk structure
 void initDisk() {
   int i;
   int index = -1;
@@ -48,6 +50,7 @@ void initDisk() {
   fclose(diskFile);
 }
 
+// Init disk content with empty inodes & blocks
 void initDiskContent() {
   int i;
 
@@ -59,7 +62,7 @@ void initDiskContent() {
   superInode.id = 0;
   strcpy(superInode.fileName, MAIN_FOLDER);
   strcat(superInode.fileName, "\0");
-  strcpy(superInode.rights, "drw-rw-rw-");
+  strcpy(superInode.rights, "drw");
 
   for (i = 0; i < BLOCKS_COUNT; i++) superInode.usedBlocks[i] = -1;
 
@@ -69,7 +72,6 @@ void initDiskContent() {
   inode_t inode;
   strcpy(inode.fileName, "");
   strcat(inode.fileName, "\0");
-
   strcpy(inode.rights, "");
   
   for (i = 0; i < BLOCKS_COUNT; i++) inode.usedBlocks[i] = -1;
@@ -83,11 +85,15 @@ void initDiskContent() {
   strcpy(block, "");
 
   for (i = 0; i < BLOCKS_COUNT; i++) fwrite(&block, sizeof(block_t), 1, diskFile);
-  // Close file
+
   fclose(diskFile);
 }
 
-
+/**
+ * Create a new file
+ * @param name the file name
+ * @param fileType the type of the file (ordinary --> '-' or directory 'd');
+ * */
 inode_t createFile(char * name, char fileType) {
   inode_t currentFolderInode, newFileInode;
   int i, j;
@@ -100,23 +106,15 @@ inode_t createFile(char * name, char fileType) {
   // New folder
   char * newFile;
   // String for available inode id
-  char * availableInodeID;
+  char availableInodeID[4];
 
-
-  /* création d'un dossier:
-  - vérifier qu'un dossier avec ce nom n'existe pas déjà: FAIT
-  - nouvel inode (donc regarder les inodes dispo): FAIT
-  - nouveau block de stocakge: FAIT
-  - ajout dans le dernier bloc du dossier courrant: FAIT
-  - initialiser l'inode pour le renvoyer: FAIT
-  - changer l'inode dans le tableau: FAIT
-  */
-  
+  // Check file name length
   if (strlen(name) > 100) {
     nstdError("Veuillez choisir un nom de moins de 100 caractères.\n");
     return newFileInode;
   }
 
+  // Get inode of current folder
   for (i = 0; i < INODES_COUNT; i++) {
     if (strcmp(disk.inodes[i].fileName, currentFolder) ==  0) {
       currentFolderInode = disk.inodes[i];
@@ -136,10 +134,12 @@ inode_t createFile(char * name, char fileType) {
     return newFileInode;
   }
 
-  // Search for free inodes
+  // Search for free inode
   for (i = 0; i < INODES_COUNT; i++) {
+    // If an inode has empty file name, it means it's free
     if (strcmp(disk.inodes[i].fileName, "") == 0) {
       newFileInode = disk.inodes[i];
+      // Get string value of inode id
       sprintf(availableInodeID, "%d", newFileInode.id);
       break;
     }
@@ -153,19 +153,23 @@ inode_t createFile(char * name, char fileType) {
   strcat(newFile, name);
   strcat(newFile, ">");
 
+  // If some blocks are used for the current folder
   if (usedBlocksCount != 0) {
     // Put folder content in an array
-    currentFolderContent = malloc(0);
+    currentFolderContent = malloc(sizeof(char));
+    strcpy(currentFolderContent, "");
     for (i = 0; i < usedBlocksCount; i++) {
       currentFolderContent = realloc(currentFolderContent, (i+1) * BLOCK_SIZE * sizeof(char));
       strcat(currentFolderContent, disk.blocks[i]);
     }
 
-    // Check if file exists
+    // Check if file with same name and same type exists
     int newFileExists = fileExists(name, fileType, currentFolderContent);
     if (newFileExists) {
       if (fileType == 'd') nstdError("Un répertoire avec ce nom existe déjà.\n");
       if (fileType == '-') nstdError("Un fichier avec ce nom existe déjà.\n");
+
+      return newFileInode;
     }
 
     int lastBlock = usedBlocks[usedBlocksCount-1];
@@ -178,32 +182,51 @@ inode_t createFile(char * name, char fileType) {
 
       for (i = 0; i < BLOCKS_COUNT; newFileInode.usedBlocks[i++] = -1);
       newFileInode.rights[0] = fileType;
-      strcpy(&newFileInode.rights[1], "rw-rw-rw-"); 
+      strcpy(&newFileInode.rights[1], "rw"); 
       //newFileInode.fileName = name;
       strcpy(newFileInode.fileName, name);
       strcat(newFileInode.fileName, "\0");
     }
     else {
-      goto useNewBlock;
+      if (availableBlocks >= 2) {
+        for (i = 0; i < BLOCKS_COUNT; i++) {
+          if (strcmp(disk.blocks[i], "") == 0) {
+            usedBlocksCount++;
+            // Use a new block
+            strcpy(disk.blocks[i], newFile);
+
+            for (j = 0; j < BLOCKS_COUNT; newFileInode.usedBlocks[j++] = -1);
+            newFileInode.rights[0] = fileType;
+            strcpy(&newFileInode.rights[1], "rw");
+            strcpy(newFileInode.fileName, name);
+            strcat(newFileInode.fileName, "\0");
+
+            for (j = 0; j < BLOCKS_COUNT; j++) {
+              if (currentFolderInode.usedBlocks[j] == -1) {
+                currentFolderInode.usedBlocks[j] = i;
+                break;
+              }
+            }
+            break;
+          }
+        }
+      }
+      else {
+        nstdError("Impossible de créer le dossier \"%s\". Il n'y a pas assez de place sur le disque.\n");
+        return newFileInode;
+      }
     }
   }
   else {
-    goto useNewBlock;
-  }
-
-  useNewBlock: 
-    /* availableBlocks must be at least 2,
-    ne to save new folder name and one to save new folder content */
     if (availableBlocks >= 2) {
       for (i = 0; i < BLOCKS_COUNT; i++) {
         if (strcmp(disk.blocks[i], "") == 0) {
           usedBlocksCount++;
-          // Modifier les blocs pour l'inode
           strcpy(disk.blocks[i], newFile);
 
           for (j = 0; j < BLOCKS_COUNT; newFileInode.usedBlocks[j++] = -1);
           newFileInode.rights[0] = fileType;
-          strcpy(&newFileInode.rights[1], "rw-rw-rw-");
+          strcpy(&newFileInode.rights[1], "rw");
           //newFileInode.fileName = name;
           strcpy(newFileInode.fileName, name);
           strcat(newFileInode.fileName, "\0");
@@ -222,17 +245,18 @@ inode_t createFile(char * name, char fileType) {
       nstdError("Impossible de créer le dossier \"%s\". Il n'y a pas assez de place sur le disque.\n");
       return newFileInode;
     }
-
+  }
 
   for (i = 0; i < INODES_COUNT; i++) {
     if (disk.inodes[i].id == currentFolderInode.id) disk.inodes[i] = currentFolderInode;
     if (disk.inodes[i].id == newFileInode.id) disk.inodes[i] = newFileInode;
   }
 
+  saveDisk();
   return newFileInode;
 }
 
-//to-do: add date save
+// Save changes
 void saveDisk() { 
   int i;
 
@@ -242,7 +266,11 @@ void saveDisk() {
   fclose(diskFile);    
 }
 
-
+/**
+ * Displays error with formatted variables
+ * @param format the string to display with C format tags
+ * @param ... list of args which correspond to C format tags in "format"
+ */
 void nstdError(const char *format, ...) {
     va_list args;
     
@@ -253,21 +281,33 @@ void nstdError(const char *format, ...) {
     fprintf(stderr, "\n");
 }
 
+/**
+ * Check if a file exists in the current folder
+ * @param fileName the name of the file to look for
+ * @param fileType the type of the file (ordinary or directory)
+ * @param folderContent the string which contains the pair <inode:file name> 
+ * for all files of the current folder
+ */
 int fileExists(char * fileName, char fileType, char * folderContent) {
   int i, j;
+  // Check if fileName is a substring of folderContent
   if (strstr(folderContent, fileName) != NULL) {
     int folderItemsCount;
+    
+    // Split folderContent to get an array which contains all pairs <inode:file name>
     char ** folderItems = splitStr(folderContent, "||", &folderItemsCount);
-  
+    printf("items count: %d\n", folderItemsCount);
     for (i = 0; i < folderItemsCount; i++) {
+    printf("%s\n", folderItems[i]);
+      // Check if the current element of folderItems contains fileName as a substring
       if (strstr(folderItems[i], fileName) != NULL) {
         int currentItemInodeID;
 
-        sscanf(folderItems[i], "%*c %d", &currentItemInodeID);
-
+        // Get the inode id of the current item
+        sscanf(folderItems[i], "%*c%d", &currentItemInodeID);
         for (j = 0; j < INODES_COUNT; j++) {
-          if (disk.inodes[i].id == currentItemInodeID) {
-            if (disk.inodes[i].rights[0] == fileType) {
+          if (disk.inodes[j].id == currentItemInodeID && strcmp(disk.inodes[j].fileName, fileName) == 0) {
+            if (disk.inodes[j].rights[0] == fileType) {
               return 1;
             }
           }
@@ -276,4 +316,18 @@ int fileExists(char * fileName, char fileType, char * folderContent) {
     }
   }
   return 0;
+}
+
+void testContent() {
+  int i, j;
+
+  for (i = 0; i < INODES_COUNT; i++) {
+    for (j = 0; j < BLOCKS_COUNT; j++) {
+      if (disk.inodes[i].usedBlocks[j] != -1) {
+        if (strcmp(disk.blocks[disk.inodes[i].usedBlocks[j]], "") != 0) {
+          printf("contenu en [%d, %d]: %s\n", i, j, disk.blocks[disk.inodes[i].usedBlocks[j]]);
+        }
+      }
+    }
+  }
 }

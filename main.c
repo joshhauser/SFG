@@ -5,5 +5,7 @@
 
 int main() {
   initDisk();
+  createFile("militaire", 'd'); 
+  testContent();
   return 0;
 }
