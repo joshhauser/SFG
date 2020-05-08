@@ -1,7 +1,7 @@
 # Compiler
 CC=gcc
 # Flags for compilation
-CFLAGS=-Wall
+CFLAGS=-Wall -m32
 # Executable file name
 EXEC=sgf
 # Source files folder

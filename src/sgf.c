@@ -451,6 +451,32 @@ void rewriteFolderContent(inode_t * folderInode, char * folderContent, int usedB
 
 
 
+/**
+ * A faire:
+ * - move()
+ * - copy()
+ * - link()
+ * - df()
+ * - read()
+ * - write()
+ * - ls()
+ * - cd()
+ * - open()
+ * - close()
+ **/
+
+void diskFree() {
+  int remainingSpace = 0;
+  int i;
+
+  for (i = 0; i < BLOCKS_COUNT; i++) {
+    remainingSpace += (BLOCK_SIZE - strlen(disk.blocks[i]));
+  }
+
+  printf("Free inodes:\t%d\n", availableInodes);
+  printf("Free blocks:\t%d\n", availableBlocks);
+  printf("Free bytes:\t%d\n", remainingSpace);
+}
 
 // TESTS -------
 void testContent() {

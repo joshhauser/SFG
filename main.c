@@ -8,9 +8,7 @@ int main() {
   createFile("militaire", 'd'); 
   createFile("jambon", 'd'); 
   createFile("fromage", 'd'); 
-  testContent();
   removeFolder("militaire");
-  testContent();
-  
+  diskFree();  
   return 0;
 }

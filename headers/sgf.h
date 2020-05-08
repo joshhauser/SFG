@@ -64,10 +64,12 @@ typedef struct file_t {
 void initDisk();
 void initDiskContent();
 void saveDisk();
+void diskFree();
 void testContent();
 void nstdError(const char *format, ...);
 void removeFolder(char * folderName);
 void rewriteFolderContent(inode_t * folderInode, char * folderContent, int usedBlocksCount);
+
 
 int fileExists(char * fileName, char fileType, char * folderContent);
 
