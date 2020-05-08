@@ -6,6 +6,7 @@
 #define INODES_COUNT 50
 #define BLOCKS_COUNT 150
 #define MAIN_FOLDER "/home/"
+#define FOLDER_DELIMITER "||"
 
 // Enums ================
 /* typedef enum fileType_e {
@@ -63,8 +64,10 @@ typedef struct file_t {
 void initDisk();
 void initDiskContent();
 void saveDisk();
-void nstdError(const char *format, ...);
 void testContent();
+void nstdError(const char *format, ...);
+void removeFolder(char * folderName);
+void rewriteFolderContent(inode_t * folderInode, char * folderContent, int usedBlocksCount);
 
 int fileExists(char * fileName, char fileType, char * folderContent);
 

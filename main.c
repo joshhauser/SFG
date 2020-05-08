@@ -6,6 +6,11 @@
 int main() {
   initDisk();
   createFile("militaire", 'd'); 
+  createFile("jambon", 'd'); 
+  createFile("fromage", 'd'); 
   testContent();
+  removeFolder("militaire");
+  testContent();
+  
   return 0;
 }
