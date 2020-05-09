@@ -71,11 +71,11 @@ void nstdError(const char *format, ...);
 void removeFolder(char * folderName);
 void rewriteFolderContent(inode_t * folderInode, char * folderContent, int usedBlocksCount);
 void writeFile(file_t file, char *buffer, int bufferSize);
-
+void readFile(file_t file, char **buffer, int bufferSize);
 void myls();
+void closeFile(file_t file);
 
 int fileExists(char * fileName, char fileType, char * folderContent);
-int closeFile(file_t file);
 int getRemainingSpace(char *content);
 
 char *getCurrentFolderContent();

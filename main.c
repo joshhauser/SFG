@@ -6,12 +6,12 @@
 
 int main() {
   initDisk();
- // createFile("militaire", 'd'); 
- // createFile("cactus", 'd'); 
+  // createFile("militaire", 'd'); 
+  //createFile("cactus", 'd'); 
   //createFile("tricycle", 'd');
   //testContent();
   //removeFolder("militaire");
-  myls();
-  diskFree();  
+  //myls();
+  //diskFree();  
   return 0;
 }

@@ -469,6 +469,7 @@ file_t openFile(char * fileName, accessMode_e mode) {
   }
   else {
     file.inodeID = -1;
+    file.mode = -1;
     nstdError("Le fichier %s n'exise pas dans ce répertoire.\n", fileName);
   }
   
@@ -478,17 +479,12 @@ file_t openFile(char * fileName, accessMode_e mode) {
 /**
  * Closes a file
  * @param file the structure that corresponds to the file to close
- * @return 0 for success, -1 for fail
  **/
-int closeFile(file_t file) {
+void closeFile(file_t file) {
   if (file.inodeID != -1) {
     file.inodeID = -1;
     file.mode = -1;
-
-    return 0;
   }
-
-  return -1;
 }
 
 /**
@@ -582,9 +578,7 @@ void writeFile(file_t file, char *buffer, int bufferSize) {
     nstdError("Il n'y a plus de place sur le disque.\n");
     return;
   }
-  if (file.inodeID == -1) {
-    char * fileName = getFileNameByID(file.inodeID);
-    nstdError("Impossible d'écrire dans le fichier %s.", fileName);
+  if (file.inodeID == -1 || (file.mode != W && file.mode != RW)) {
     return;
   }
   else {
@@ -664,6 +658,47 @@ void writeFile(file_t file, char *buffer, int bufferSize) {
   saveDisk();
 }
 
+void readFile(file_t file, char **buffer, int bufferSize) {
+  inode_t fileInode;
+  int i = 0;
+  int usedBlocksCount = 0;
+
+  if (file.inodeID == -1 || (file.mode != R && file.mode != RW)) {
+    return;
+  }
+  else {
+    fileInode = getInodeByID(file.inodeID);
+  }
+
+  while (fileInode.usedBlocks[i] != -1) {
+    usedBlocksCount++;
+    i++;
+  }
+
+  if (usedBlocksCount == 0) {
+    *buffer = (char*) malloc(sizeof(char));
+    *buffer = "";
+    return;
+  }
+  
+  char * fileContent = (char*) malloc(sizeof(char));
+  strcpy(fileContent, "");
+  for (i = 0; i < usedBlocksCount; i++) {
+    fileContent = (char*) realloc(fileContent, ((i+1) * BLOCK_SIZE) * sizeof(char));
+    strcat(fileContent, disk.blocks[fileInode.usedBlocks[i]]);
+  }
+
+  if (strlen(fileContent) < bufferSize) {
+    *buffer = fileContent;
+  }
+  else {
+    *buffer = (char*) malloc(bufferSize * sizeof(char));
+    for (i = 0; i < bufferSize; i++) {
+      (*buffer)[i] = fileContent[i];
+    }
+  }
+}
+
 /**
  * Computes the remaining size in a block
  * @param content the block's content
@@ -729,17 +764,6 @@ char *getCurrentFolderContent() {
 
   return currentFolderContent;
 }
-
-
-
-/*
-void read() {
-
-}
-
-void write() {
-  
-} */
 
 void diskFree() {
   int remainingSpace = 0;
