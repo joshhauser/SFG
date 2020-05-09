@@ -41,7 +41,7 @@ typedef struct disk_t {
   block_t blocks[BLOCKS_COUNT];
 } disk_t;
 
-// Pair fileName + inode
+/* // Pair fileName + inode
 typedef struct fileID_t {
   char fileName;
   inode_t inode;
@@ -52,6 +52,7 @@ typedef struct directory_t {
   int nothing;
   fileID_t fileEntities[];
 } directory_t;
+ */
 
 // File
 typedef struct file_t {

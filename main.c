@@ -9,7 +9,7 @@ int main() {
   createFile("cactus", 'd'); 
   createFile("tricycle", 'd');
   testContent();
-  //removeFolder("militaire");
+  removeFolder("militaire");
   diskFree();  
   return 0;
 }
