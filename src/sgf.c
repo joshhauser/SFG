@@ -492,8 +492,6 @@ void closeFile(file_t file) {
  * - move()
  * - copy()
  * - link()
- * - read()
- * - write()
  * - cd()
  **/
 /* 
