@@ -465,13 +465,12 @@ file_t openFile(char * fileName, accessMode_e mode) {
   int fileInodeID = fileExists(fileName, '-', currentFolderContent);
   if (fileInodeID != -1) {
     file.inodeID = fileInodeID;
-    file.mode = mode;
   }
   else {
-    file.inodeID = -1;
-    file.mode = -1;
-    nstdError("Le fichier %s n'exise pas dans ce répertoire.\n", fileName);
+    inode_t fileInode = createFile(fileName, '-');
+    file.inodeID = fileInode.id;
   }
+  file.mode = mode;  
   
   return file;
 }
