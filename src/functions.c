@@ -4,13 +4,13 @@
 #include "../headers/functions.h"
 
 
-char ** splitStr(char * str, const char * delimiter, int * bufferSize) {
-  char ** buffer = (char**) malloc(sizeof(char*));
-  char * substr;
+char **splitStr(char * str, const char *delimiter, int *bufferSize) {
+  char **buffer = (char**) malloc(sizeof(char*));
+  char *substr;
   int i;
   int tokenSize;
 
-  char * copy = strDup(str);
+  char *copy = strDup(str);
   (*bufferSize) = 0;
   while ((substr = strstr(copy, delimiter)) != NULL) {
     (*bufferSize)++;
@@ -41,7 +41,7 @@ char ** splitStr(char * str, const char * delimiter, int * bufferSize) {
 }
 
 char * strDup(char * str) {
-  char * copy = malloc(strlen(str)*sizeof(char));
+  char * copy = malloc(strlen(str) + 1 *sizeof(char));
   strcpy(copy, str);
 
   return copy;

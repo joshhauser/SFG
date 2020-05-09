@@ -56,7 +56,7 @@ typedef struct directory_t {
 
 // File
 typedef struct file_t {
-  inode_t inode;
+  int inodeID;
   accessMode_e mode;
 } file_t;
 
@@ -70,11 +70,19 @@ void testContent();
 void nstdError(const char *format, ...);
 void removeFolder(char * folderName);
 void rewriteFolderContent(inode_t * folderInode, char * folderContent, int usedBlocksCount);
+void writeFile(file_t file, char *buffer, int bufferSize);
 
 
 int fileExists(char * fileName, char fileType, char * folderContent);
+int closeFile(file_t file);
+int getRemainingSpace(char *content);
 
+char *getCurrentFolderContent();
+char *getFileNameByID(int inodeID);
+
+
+inode_t getInodeByID(int inodeID);
 inode_t createFile(char * name, char fileType);
-
+file_t openFile(char * fileName, accessMode_e mode);
 
 #endif

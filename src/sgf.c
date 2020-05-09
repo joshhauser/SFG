@@ -3,6 +3,7 @@
 #include <unistd.h>
 #include <string.h>
 #include <stdarg.h>
+#include <math.h>
 
 #include "../headers/sgf.h"
 #include "../headers/functions.h"
@@ -15,7 +16,7 @@ int availableBlocks = BLOCKS_COUNT;
 int availableInodes = INODES_COUNT;
 
 
-// Init the disk structure
+// Inits the disk structure
 void initDisk() {
   int i;
   int index = -1;
@@ -34,30 +35,30 @@ void initDisk() {
     initDiskContent();
   }
   diskFile = fopen("disk0", "rb");
-  // Put the file's index at the beginning
+  // Puts the file's index at the beginning
   fseek(diskFile, 0, SEEK_SET);
-  // Get inodes
+  // Gets inodes
   for (i = 0; i < INODES_COUNT; i++) {
     fread(&disk.inodes[i], sizeof(inode_t), 1, diskFile);
     currentFolderInode = disk.inodes[0];
     if (strcmp(disk.inodes[i].fileName, "") != 0) availableInodes--;
   }
-  // Get blocks
+  // Gets blocks
   for (i = 0; i < BLOCKS_COUNT; i++) {
     fread(&disk.blocks[i], sizeof(block_t), 1, diskFile);
     if (strcmp(disk.blocks[i], "") != 0) availableBlocks--;
   }
 
 
-  // Close file
+  // Closes file
   fclose(diskFile);
 }
 
-// Init disk content with empty inodes & blocks
+// Inits disk content with empty inodes & blocks
 void initDiskContent() {
   int i;
 
-  // Create the disk's file
+  // Creates the disk's file
   diskFile = fopen("disk0", "a+b");
   
   // Create main inode
@@ -71,7 +72,7 @@ void initDiskContent() {
 
   fwrite(&superInode, sizeof(inode_t), 1, diskFile);
 
-  // Create inodes to init disk content
+  // Creates inodes to init disk content
   inode_t inode;
   strcpy(inode.fileName, "");
   strcat(inode.fileName, "\0");
@@ -93,9 +94,10 @@ void initDiskContent() {
 }
 
 /**
- * Create a new file
+ * Creates a new file
  * @param name the file name
  * @param fileType the type of the file (ordinary --> '-' or directory 'd');
+ * @return the inode of the created file
  * */
 inode_t createFile(char * name, char fileType) {
   inode_t newFileInode;
@@ -161,13 +163,15 @@ inode_t createFile(char * name, char fileType) {
   // If some blocks are used for the current folder
   if (usedBlocksCount != 0) {
     // Put folder content in an array
-    currentFolderContent = malloc(sizeof(char));
+    /*currentFolderContent = malloc(sizeof(char));
     strcpy(currentFolderContent, "");
     for (i = 0; i < usedBlocksCount; i++) {
       currentFolderContent = realloc(currentFolderContent, (i+1) * BLOCK_SIZE * sizeof(char));
       strcat(currentFolderContent, disk.blocks[usedBlocks[i]]);
-    }
+    }*/
 
+    currentFolderContent = getCurrentFolderContent();
+    
     // Check if file with same name and same type exists
     int newFileExists = fileExists(name, fileType, currentFolderContent);
     if (newFileExists != -1) {
@@ -252,11 +256,12 @@ inode_t createFile(char * name, char fileType) {
     }
   }
 
-
+  /* If the new file is a directory, it's necessary to add
+  the parent folder path to it, to allow "cd .." execution */
   if (fileType == 'd') {
     char currentFolderInodeID[4];
     sprintf(currentFolderInodeID, "%d", currentFolderInode.id);
-    char * newFolderContent = (char*) malloc(3 + strlen(currentFolderInodeID));
+    char * newFolderContent = (char*) malloc(4 + strlen(currentFolderInodeID) * sizeof(char));
     strcpy(newFolderContent, "<");
     strcat(newFolderContent, currentFolderInodeID);
     strcat(newFolderContent, ":..>");
@@ -284,7 +289,7 @@ inode_t createFile(char * name, char fileType) {
   return newFileInode;
 }
 
-// Save changes
+// Saves changes
 void saveDisk() { 
   int i;
 
@@ -346,25 +351,16 @@ int fileExists(char * fileName, char fileType, char * folderContent) {
   return -1;
 }
 
-
+/**
+ * Removes an empty folder
+ * @param folderName the name of the folder to remove
+ **/
 void removeFolder(char * folderName) {
   inode_t folderInode;
-  char * currentFolderContent;
+  char * currentFolderContent = getCurrentFolderContent();
   int i;
   int usedBlocksCount = 0;
 
-  i = 0;
-  while (currentFolderInode.usedBlocks[i] != -1) {
-    usedBlocksCount++;
-    i++;
-  }
-
-  currentFolderContent = (char*) malloc(sizeof(char));
-  strcpy(currentFolderContent, "");
-  for (i = 0; i < usedBlocksCount; i++) {
-    currentFolderContent = realloc(currentFolderContent, (i+1) * BLOCK_SIZE * sizeof(char));
-    strcat(currentFolderContent, disk.blocks[currentFolderInode.usedBlocks[i]]);
-  }
 
   int folderInodeID = fileExists(folderName, 'd', currentFolderContent);
   if (folderInodeID == -1) {
@@ -421,7 +417,12 @@ void removeFolder(char * folderName) {
   saveDisk();
 }
 
-
+/**
+ * Rewrites folder content when a file is deleted
+ * @param folderInode the folder of which the content will be rewrote
+ * @param folderContent the content to rewrite
+ * @param usedBlocksCount the number of used blocks for the folder
+ **/
 void rewriteFolderContent(inode_t * folderInode, char * folderContent, int usedBlocksCount) {
   int folderItemsCount, i, j;
   int remainingSpace;
@@ -450,6 +451,45 @@ void rewriteFolderContent(inode_t * folderInode, char * folderContent, int usedB
 }
 
 
+/**
+ * Opens a file
+ * @param fileName the name of the file to open
+ * @param mode the mode for the file opening (R, W, RW)
+ * @return the file structure that contains
+ * the inode ID of the file + the access mode
+ **/
+file_t openFile(char * fileName, accessMode_e mode) {
+  file_t file;
+  char * currentFolderContent = getCurrentFolderContent();
+
+  int fileInodeID = fileExists(fileName, '-', currentFolderContent);
+  if (fileInodeID != -1) {
+    file.inodeID = fileInodeID;
+    file.mode = mode;
+  }
+  else {
+    file.inodeID = -1;
+    nstdError("Le fichier %s n'exise pas dans ce répertoire.\n", fileName);
+  }
+  
+  return file;
+}
+
+/**
+ * Closes a file
+ * @param file the structure that corresponds to the file to close
+ * @return 0 for success, -1 for fail
+ **/
+int closeFile(file_t file) {
+  if (file.inodeID != -1) {
+    file.inodeID = -1;
+    file.mode = -1;
+
+    return 0;
+  }
+
+  return -1;
+}
 
 /**
  * A faire:
@@ -458,16 +498,177 @@ void rewriteFolderContent(inode_t * folderInode, char * folderContent, int usedB
  * - link()
  * - read()
  * - write()
- * - ls()
  * - cd()
- * - open()
- * - close()
  **/
 
-/* file_t open(char * fileName) {
+/**
+ * Writes a buffer's content in a file
+ * @param file the file to write to
+ * @param buffer the content to add to the file
+ * @param bufferSize the number of the buffer's bytes
+ **/
+void writeFile(file_t file, char *buffer, int bufferSize) {
+  int i, j, newBlock;
+  int bufferPos = 0;
+  inode_t fileInode;
+  // Necessary blocks to write buffer's content
+  int necessaryBlocksCount = ceil((double) bufferSize / BLOCK_SIZE);
 
+  if (availableBlocks == 0) {
+    nstdError("Il n'y a plus de place sur le disque.\n");
+    return;
+  }
+  if (file.inodeID == -1) {
+    char * fileName = getFileNameByID(file.inodeID);
+    nstdError("Impossible d'écrire dans le fichier %s.", fileName);
+    return;
+  }
+  else {
+    fileInode = getInodeByID(file.inodeID);
+  }
+
+  int usedBlocksCount = 0;
+  i = 0; 
+  while (fileInode.usedBlocks[i] != -1) {
+    usedBlocksCount++;
+    i++;
+  }
+
+
+  if (usedBlocksCount > 0) {
+    // Last block's content
+    char lastBlockContent[BLOCK_SIZE];
+    strcpy(lastBlockContent, disk.blocks[fileInode.usedBlocks[usedBlocksCount-1]]);
+    // Last block's remaining space
+    int lbRemainingSpace = getRemainingSpace(lastBlockContent);
+
+    // If there is enough free bytes in the last bloc
+    if (lbRemainingSpace >= bufferSize) {
+      strcat(lastBlockContent, buffer);
+      strcpy(disk.blocks[fileInode.usedBlocks[usedBlocksCount-1]], lastBlockContent);
+      saveDisk();
+      return;
+    }
+    else {
+      if (availableBlocks >= necessaryBlocksCount) {
+        // If there are some free bytes in the last used block
+        if (lbRemainingSpace > 0) {
+          for (i = 0; i < lbRemainingSpace; i++) {
+            //strcat(lastBlockContent, buffer[i]);
+            lastBlockContent[BLOCK_SIZE - lbRemainingSpace + i] = buffer[i];
+          }
+          bufferPos = i;
+          strcpy(disk.blocks[fileInode.usedBlocks[usedBlocksCount-1]], lastBlockContent);
+        }
+      }
+      else{
+        nstdError("Il n'y a pas assez de place sur le disque.\n");
+        return;
+      }
+    }
+  }
+
+  for (i = 0; i < necessaryBlocksCount; i++) {
+    for (j = 0; j < BLOCKS_COUNT; j++) {
+      // Get new block
+      if (strcmp(disk.blocks[j], "") == 0) {
+        newBlock = j;
+        break;
+      }
+    }
+
+    j = 0;
+    // Write bytes from the buffer while there is a free byte in the current block
+    while (getRemainingSpace(disk.blocks[newBlock]) >= 1 && bufferPos < bufferSize) {
+      disk.blocks[newBlock][j] = buffer[bufferPos];
+      j++;
+      bufferPos++;
+    }
+
+    usedBlocksCount++;
+    // Add the new block to fileInode.usedBlocks array
+    fileInode.usedBlocks[usedBlocksCount-1] = newBlock;
+  }
+
+  // Update inode
+  for (i = 0; i < INODES_COUNT; i++) {
+    if (disk.inodes[i].id == fileInode.id) {
+      disk.inodes[i] = fileInode;
+      break;
+    }
+  }
+  saveDisk();
 }
 
+/**
+ * Computes the remaining size in a block
+ * @param content the block's content
+ * @return the remaining size
+ **/
+int getRemainingSpace(char *content) {
+  return BLOCK_SIZE - strlen(content);
+}
+
+/**
+ * Gets an inode by its id
+ * @param inodeID the id of the inode to get
+ * @return the founded inode
+ **/
+inode_t getInodeByID(int inodeID) {
+  inode_t inode;
+  int i;
+  for (i = 0; i < INODES_COUNT; i++) {
+    if (disk.inodes[i].id == inodeID) {
+      inode = disk.inodes[i];
+      break;
+    }
+  }
+
+  return inode;
+}
+
+/**
+ * Gets a file name by the file's inode id
+ * @param inodeID the id of the file's inode
+ * @return the founded file name
+ **/
+char *getFileNameByID(int inodeID) {
+  int i;
+  for (i = 0; i < INODES_COUNT; i++) {
+    if (disk.inodes[i].id == inodeID) return disk.inodes[i].fileName;
+  }
+
+  return NULL;
+}
+
+/**
+ * Get the content of the current folder
+ * @return the content of the current folder
+ **/
+char *getCurrentFolderContent() {
+  int usedBlocksCount = 0;
+  int i;
+  char * currentFolderContent;
+
+  i = 0;
+  while (currentFolderInode.usedBlocks[i] != -1) {
+    usedBlocksCount++;
+    i++;
+  }
+
+  currentFolderContent = (char*) malloc(sizeof(char));
+  strcpy(currentFolderContent, "");
+  for (i = 0; i < usedBlocksCount; i++) {
+    currentFolderContent = realloc(currentFolderContent, (i+1) * BLOCK_SIZE * sizeof(char));
+    strcat(currentFolderContent, disk.blocks[currentFolderInode.usedBlocks[i]]);
+  }
+
+  return currentFolderContent;
+}
+
+
+
+/*
 void read() {
 
 }
