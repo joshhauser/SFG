@@ -5,11 +5,12 @@
 
 int main() {
   initDisk();
-  createFile("militaire", 'd'); 
-  createFile("cactus", 'd'); 
-  createFile("tricycle", 'd');
-  testContent();
+ // createFile("militaire", 'd'); 
+ // createFile("cactus", 'd'); 
+  //createFile("tricycle", 'd');
+  //testContent();
   //removeFolder("militaire");
+  myls();
   diskFree();  
   return 0;
 }

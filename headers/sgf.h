@@ -69,7 +69,7 @@ void testContent();
 void nstdError(const char *format, ...);
 void removeFolder(char * folderName);
 void rewriteFolderContent(inode_t * folderInode, char * folderContent, int usedBlocksCount);
-
+void myls();
 
 int fileExists(char * fileName, char fileType, char * folderContent);
 
