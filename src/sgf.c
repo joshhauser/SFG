@@ -493,54 +493,20 @@ void closeFile(file_t file) {
  * - link()
  * - cd()
  **/
-/* 
-void myls() {
-   int i, j;
-   //Displays file names inside the current folder's blocks
-   int init_size = strlen(disk.blocks);
-   char delim[] = "||";
-   char *ptr = strtok(disk.blocks, delim);
-   while (ptr != NULL)
-	{
-		if ( disk.inodes[j].rights[0] == 'd' ) 
-		{
-			printf("[d]");
-		}
-		else if ( disk.inodes[j].rights[0] == '-' ) {
-			printf("[f] '%c'\n", ptr);
-		}
-			
-		for (i=0;i<strlen(ptr);i++)
-		{
-			if(( ptr[i] != '<'  &&  ptr[i] != '>'  && ptr[i] != ':' ) && ( ptr[i]<'0' || ptr[i]>'9' ))
-			{
-				printf("%c", ptr[i]);
-			}
-		}
-		printf("    ");
-		ptr = strtok(NULL, delim);
-		j++;
-	}
-	
-	printf("\n");
-}
 
-*/
 void myls() {
-	int i, j;
-   //Split the disk's block content for display
-  
-   int init_size = strlen(disk.blocks);
+   int i,j;
    char delim[] = "||";
-   char *ptr = strtok(disk.blocks, delim);
+   char *ptr = strtok(*disk.blocks, delim);
    while (ptr != NULL)
 	{
 		if ( disk.inodes[j].rights[0] == 'd' ) 
 		{
 			printf("[d]");
 		}
-		else if ( disk.inodes[j].rights[0] == '-' ) {
-			printf("[f] '%c'\n", ptr);
+		else if ( disk.inodes[j].rights[0] == '-' ) 
+		{
+			printf("[f]");
 		}
 			
 		for (i=0;i<strlen(ptr);i++)
