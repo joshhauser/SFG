@@ -493,22 +493,23 @@ void closeFile(file_t file) {
  * - link()
  * - cd()
  **/
-
 void myls() {
-   int i,j;
+	int i, j;
+   //Split the disk's block content for display
+  
+   int init_size = strlen(*disk.blocks);
    char delim[] = "||";
-   char *ptr = strtok(*disk.blocks, delim);
+   char * ptr = strtok(*disk.blocks, delim);
    while (ptr != NULL)
 	{
-		if ( disk.inodes[j].rights[0] == 'd' ) 
-		{
-			printf("[d]");
-		}
-		else if ( disk.inodes[j].rights[0] == '-' ) 
-		{
+		//printf(" %c", disk.inodes[j].rights[0]);
+		if ( disk.inodes[j].rights[0] == '-' ) {
 			printf("[f]");
 		}
-			
+		else if ( disk.inodes[j].rights[0] == 'd' ) 
+		{
+			printf("[d]");
+		}			
 		for (i=0;i<strlen(ptr);i++)
 		{
 			if(( ptr[i] != '<'  &&  ptr[i] != '>'  && ptr[i] != ':' ) && ( ptr[i]<'0' || ptr[i]>'9' ))
@@ -530,6 +531,7 @@ void myls() {
  * @param buffer the content to add to the file
  * @param bufferSize the number of the buffer's bytes
  **/
+ /*
 void writeFile(file_t file, char *buffer, int bufferSize) {
   int i, j, newBlock;
   int bufferPos = 0;
@@ -660,7 +662,7 @@ void readFile(file_t file, char **buffer, int bufferSize) {
       (*buffer)[i] = fileContent[i];
     }
   }
-}
+}*/
 
 /**
  * Computes the remaining size in a block
