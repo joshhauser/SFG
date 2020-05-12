@@ -7,12 +7,13 @@
 
 int main() {
   initDisk();
-  createFile("militaire", 'd'); 
-  //createFile("cactus", 'd'); 
+  createFile("abc",'d'); 
+  createFile("cactus",'-'); 
+  // createFile("militaire", 'd'); 
   //createFile("tricycle", 'd');
   //testContent();
   //removeFolder("militaire");
-  //myls();
-  //diskFree();  
+  myls();
+  diskFree();  
   return 0;
 }
