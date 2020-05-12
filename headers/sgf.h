@@ -18,7 +18,7 @@
 typedef enum accessMode_e {
   R, // read
   W, // write
-  RW // read & write
+  A // append
 } accessMode_e;
 
 // Structs ===============
@@ -61,24 +61,28 @@ typedef struct file_t {
 } file_t;
 
 
-// Functions
+// Functions ===============
 void initDisk();
 void initDiskContent();
 void saveDisk();
 void diskFree();
 void testContent();
-void nstdError(const char *format, ...);
-void removeFolder(char * folderName);
-void rewriteFolderContent(inode_t * folderInode, char * folderContent, int usedBlocksCount);
-void writeFile(file_t file, char *buffer, int bufferSize);
-void readFile(file_t file, char **buffer, int bufferSize);
 void myls();
 void closeFile(file_t file);
+void removeFile(char *fileName);
+void removeFolder(char * folderName);
+void nstdError(const char *format, ...);
+void writeFile(file_t file, char *buffer, int bufferSize);
+void readFile(file_t file, char **buffer, int bufferSize);
+void moveFile(char *source, char *destination);
+void rewriteFolderContent(inode_t * folderInode, char * folderContent, int usedBlocksCount);
 
+
+int changeDirectory(char *newDir);
 int fileExists(char * fileName, char fileType, char * folderContent);
 int getRemainingSpace(char *content);
 
-char *getCurrentFolderContent();
+char *getFolderContent(inode_t folder);
 char *getFileNameByID(int inodeID);
 
 

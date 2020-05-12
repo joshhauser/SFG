@@ -162,22 +162,11 @@ inode_t createFile(char * name, char fileType) {
 
   // If some blocks are used for the current folder
   if (usedBlocksCount != 0) {
-    // Put folder content in an array
-    /*currentFolderContent = malloc(sizeof(char));
-    strcpy(currentFolderContent, "");
-    for (i = 0; i < usedBlocksCount; i++) {
-      currentFolderContent = realloc(currentFolderContent, (i+1) * BLOCK_SIZE * sizeof(char));
-      strcat(currentFolderContent, disk.blocks[usedBlocks[i]]);
-    }*/
-
-    currentFolderContent = getCurrentFolderContent();
+    currentFolderContent = getFolderContent(currentFolderInode);
     
     // Check if file with same name and same type exists
-    int newFileExists = fileExists(name, fileType, currentFolderContent);
-    if (newFileExists != -1) {
-      if (fileType == 'd') nstdError("Un répertoire avec ce nom existe déjà.\n");
-      if (fileType == '-') nstdError("Un fichier avec ce nom existe déjà.\n");
-
+    if (fileExists(name, '-', currentFolderContent) != -1 || fileExists(name, 'd', currentFolderContent) != -1) {
+      nstdError("Un fichier avec ce nom existe déjà.\n");
       return newFileInode;
     }
 
@@ -185,14 +174,13 @@ inode_t createFile(char * name, char fileType) {
     int lbContentSize = strlen(disk.blocks[lastBlock]) * sizeof(char);
     int availableSpace = BLOCK_SIZE - lbContentSize;
 
-    if ((lbContentSize < BLOCK_SIZE) && availableSpace >= ((strlen(newFile) + 3) * sizeof(char))) {
+    if ((lbContentSize < BLOCK_SIZE) && availableSpace >= ((strlen(newFile) + strlen(FOLDER_DELIMITER) + 1) * sizeof(char))) {
       strcat(disk.blocks[lastBlock], FOLDER_DELIMITER);
       strcat(disk.blocks[lastBlock], newFile);
 
       for (i = 0; i < BLOCKS_COUNT; newFileInode.usedBlocks[i++] = -1);
       newFileInode.rights[0] = fileType;
       strcpy(&newFileInode.rights[1], "rw"); 
-      //newFileInode.fileName = name;
       strcpy(newFileInode.fileName, name);
       strcat(newFileInode.fileName, "\0");
     }
@@ -357,7 +345,7 @@ int fileExists(char * fileName, char fileType, char * folderContent) {
  **/
 void removeFolder(char * folderName) {
   inode_t folderInode;
-  char * currentFolderContent = getCurrentFolderContent();
+  char * currentFolderContent = getFolderContent(currentFolderInode);
   int i;
   int usedBlocksCount = 0;
 
@@ -368,12 +356,7 @@ void removeFolder(char * folderName) {
     return;
   }
 
-  for (i = 0; i < INODES_COUNT; i++) {
-    if (disk.inodes[i].id == folderInodeID) {
-      folderInode = disk.inodes[i];
-      break;
-    }
-  }
+  folderInode = getInodeByID(folderInodeID);
 
   // Number of items in the folder to delete
   int folderItemsCount;
@@ -411,6 +394,7 @@ void removeFolder(char * folderName) {
     }
     else if (disk.inodes[i].id == folderInode.id) {
       disk.inodes[i] = folderInode;
+      availableInodes++;
     }
   }
 
@@ -446,8 +430,10 @@ void rewriteFolderContent(inode_t * folderInode, char * folderContent, int usedB
     }
   }
 
-  if (strcmp(disk.blocks[folderInode->usedBlocks[usedBlocksCount-1]], "") == 0)
+  if (strcmp(disk.blocks[folderInode->usedBlocks[usedBlocksCount-1]], "") == 0) {
     folderInode->usedBlocks[usedBlocksCount-1] = -1;
+    availableBlocks++;
+  }
 }
 
 
@@ -460,7 +446,7 @@ void rewriteFolderContent(inode_t * folderInode, char * folderContent, int usedB
  **/
 file_t openFile(char * fileName, accessMode_e mode) {
   file_t file;
-  char * currentFolderContent = getCurrentFolderContent();
+  char * currentFolderContent = getFolderContent(currentFolderInode);
 
   int fileInodeID = fileExists(fileName, '-', currentFolderContent);
   if (fileInodeID != -1) {
@@ -575,11 +561,22 @@ void writeFile(file_t file, char *buffer, int bufferSize) {
     nstdError("Il n'y a plus de place sur le disque.\n");
     return;
   }
-  if (file.inodeID == -1 || (file.mode != W && file.mode != RW)) {
+  if (file.inodeID == -1 || (file.mode != W && file.mode != A)) {
     return;
   }
   else {
     fileInode = getInodeByID(file.inodeID);
+  }
+
+  // If the mode is W, the existing content is erased
+  if (file.mode == W) {
+    i = 0;
+    while (fileInode.usedBlocks[i] != -1) {
+      strcpy(disk.blocks[fileInode.usedBlocks[i]], "");
+      fileInode.usedBlocks[i] == -1;
+      i++;
+    }
+    goto writeFileContent;
   }
 
   int usedBlocksCount = 0;
@@ -588,8 +585,7 @@ void writeFile(file_t file, char *buffer, int bufferSize) {
     usedBlocksCount++;
     i++;
   }
-
-
+  
   if (usedBlocksCount > 0) {
     // Last block's content
     char lastBlockContent[BLOCK_SIZE];
@@ -623,6 +619,7 @@ void writeFile(file_t file, char *buffer, int bufferSize) {
     }
   }
 
+  writeFileContent:
   for (i = 0; i < necessaryBlocksCount; i++) {
     for (j = 0; j < BLOCKS_COUNT; j++) {
       // Get new block
@@ -641,6 +638,7 @@ void writeFile(file_t file, char *buffer, int bufferSize) {
     }
 
     usedBlocksCount++;
+    availableBlocks--;
     // Add the new block to fileInode.usedBlocks array
     fileInode.usedBlocks[usedBlocksCount-1] = newBlock;
   }
@@ -660,7 +658,7 @@ void readFile(file_t file, char **buffer, int bufferSize) {
   int i = 0;
   int usedBlocksCount = 0;
 
-  if (file.inodeID == -1 || (file.mode != R && file.mode != RW)) {
+  if (file.inodeID == -1 || (file.mode != R && file.mode != A)) {
     return;
   }
   else {
@@ -695,6 +693,172 @@ void readFile(file_t file, char **buffer, int bufferSize) {
     }
   }
 }
+
+void moveFile(char *source, char *destination) {
+  int i, j;
+  char *currentFolderContent = getFolderContent(currentFolderInode);
+  int sourceInodeID, destinationInodeID;
+  inode_t sourceInode, destinationInode;
+  
+  // Check if the source file exists
+  if ((sourceInodeID = fileExists(source, '-', currentFolderContent)) == -1 && (sourceInodeID = fileExists(source, 'd', currentFolderContent)) == -1) {
+    nstdError("Ce fichier n'existe pas.\n");
+    return;
+  }
+  
+  // Get the source file inode ID
+  sourceInode = getInodeByID(sourceInodeID);
+ 
+  // The source is a folder
+  if (strstr(destination, "/") != NULL) {
+    // Remove '/'
+    /* Note: if the destination paths has multiple folder,
+    it won't works and an error will be thrown, because this program
+    doesn't take that type of paths in account */
+    destination[strlen(destination) - 1] = '\0';
+    destinationInodeID = fileExists(destination, 'd', currentFolderContent);
+    // Check if the source folder exists
+    if (destinationInodeID != -1) {
+      destinationInode = getInodeByID(destinationInodeID);
+      // String value of source's inode id
+      char stringValueOfSourceID[4];
+      sprintf(stringValueOfSourceID, "%d", destinationInodeID);
+
+      char *fileToMove = malloc((strlen(source) + 4) * sizeof(char));
+      strcpy(fileToMove, "<");
+      strcat(fileToMove, stringValueOfSourceID);
+      strcat(fileToMove, ":>");
+      strcat(fileToMove, "\0");
+
+      // Last block used by the source folder
+      int lastUsedBlock;
+
+      i = 0;
+      while (destinationInode.usedBlocks[i] != -1) {
+        lastUsedBlock = destinationInode.usedBlocks[i];
+        i++;
+      }
+
+      // Remaining space in the last used block
+      int lbRemainingSpace = getRemainingSpace(disk.blocks[lastUsedBlock]);
+      // Check if there is enough free bytes to add the new entry to the source folder
+      if (lbRemainingSpace >= (strlen(destination) + strlen(FOLDER_DELIMITER))) {
+        strcat(disk.blocks[lastUsedBlock], FOLDER_DELIMITER);
+        strcat(disk.blocks[lastUsedBlock], fileToMove);
+      }
+      else {
+        for (i = 0; i < BLOCKS_COUNT; i++) {
+          // Get a free block
+          if (strcmp(disk.blocks[i], "") == 0) {
+            strcpy(disk.blocks[i], fileToMove);
+            for (j = 0; j < BLOCKS_COUNT; j++) {
+              if (sourceInode.usedBlocks[j] == -1) {
+                sourceInode.usedBlocks[j] = i;
+                break;
+              }
+            }
+            break;
+          }
+        }
+      }
+    }
+    else  {
+      nstdError("Le répertoire %s n'existe pas.\n", destination);
+      return;
+    }
+  }
+  else {
+    strcpy(sourceInode.fileName, destination);
+  }
+
+  for (i = 0 ; i < INODES_COUNT; i++) {
+    if (disk.inodes[i].id == sourceInode.id) {
+      disk.inodes[i] = sourceInode;
+      break;
+    }
+  }
+
+  removeFile(source);
+  saveDisk();
+}
+
+void copyFile(char *source, char *destination) {
+  int i;
+  char *sourceFileContent;
+  char *currentFolderContent = getFolderContent(currentFolderInode);
+  int sourceInodeID, destinationInodeID.
+  inode_t sourceInode, destinationInode;
+
+  // Check if the source file exists
+  if ((sourceInodeID = fileExists(source, '-', currentFolderContent)) == -1 && (sourceInodeID = fileExists(source, 'd', currentFolderContent)) == -1) {
+    nstdError("Ce fichier n'existe pas.\n");
+    return;
+  }
+  
+  // Get the source file inode ID
+  sourceInode = getInodeByID(sourceInodeID);
+
+  // Get source file content
+  sourceFileContent = (char*) malloc(sizeof(char));
+  strcpy(sourceFileContent, "");
+  i = 0;
+  while (sourceInode.usedBlocks[i] != -1) {
+    sourceFileContent = (char*) realloc(sourceFileContent, (1 + (i+1) * BLOCK_SIZE) * sizeof(char));
+    strcat(sourceFileContent, disk.blocks[sourceInode.usedBlocks[i]]);
+    i++;
+  }
+
+  sourceFileContent[strlen(sourceFileContent)] = '\0';
+
+  // The source is a folder
+  if (strstr(destination, "/") !=  NULL) {
+    // Remove '/'
+    /* Note: if the destination paths has multiple folder,
+    it won't works and an error will be thrown, because this program
+    doesn't take that type of paths in account */
+    destination[strlen(destination) - 1] = '\0';
+    destinationInodeID = fileExists(destination, 'd', currentFolderContent);
+
+    // Check if the source folder exists
+    if (destinationInodeID != -1) {
+      destinationInode = getInodeByID(destinationInodeID);
+      changeDirectory(destination);
+      file_t copy = openFile(source, W);
+      writeFile(copy, sourceFileContent, strlen(sourceFileContent));
+      closeFile(copy);
+      changeDirectory("..");
+    }
+    else {
+      nstdError("Le répertoire %s n'existe pas.\n", destination);
+      return;
+    }
+  }
+  else {
+    file_t copy = openFile(destination, W);
+    writeFile(copy, sourceFileContent, strlen(sourceFileContent));
+    closeFile(copy);
+  }
+
+  saveDisk();
+}
+
+
+int changeDirectory(char *newDir) {
+  int i;
+  int newDirInodeID;
+  char *currentFolderContent = getFolderContent(currentFolderInode);
+
+  newDirInodeID = fileExists(newDir, 'd', currentFolderContent);
+
+  if (newDirInodeID == -1) {
+    nstdError("Le répertoire %s n'existe pas.\n", newDir);
+    return -1;
+  }
+
+  currentFolderInode = getInodeByID(newDirInodeID);
+  return 0;
+}
+
 
 /**
  * Computes the remaining size in a block
@@ -738,28 +902,65 @@ char *getFileNameByID(int inodeID) {
 }
 
 /**
- * Get the content of the current folder
- * @return the content of the current folder
+ * Get the content of the given folder
+ * @return the content of the given folder
  **/
-char *getCurrentFolderContent() {
+char *getFolderContent(inode_t folder) {
   int usedBlocksCount = 0;
   int i;
-  char * currentFolderContent;
+  char * folderContent;
+
+  if (folder.rights[0] != 'd') {
+    nstdError("Le répertoire %s n'existe pas.\n", folder.fileName);
+    return NULL;
+  }
 
   i = 0;
-  while (currentFolderInode.usedBlocks[i] != -1) {
+  while (folder.usedBlocks[i] != -1) {
     usedBlocksCount++;
     i++;
   }
 
-  currentFolderContent = (char*) malloc(sizeof(char));
-  strcpy(currentFolderContent, "");
+  folderContent = (char*) malloc(sizeof(char));
+  strcpy(folderContent, "");
   for (i = 0; i < usedBlocksCount; i++) {
-    currentFolderContent = realloc(currentFolderContent, (i+1) * BLOCK_SIZE * sizeof(char));
-    strcat(currentFolderContent, disk.blocks[currentFolderInode.usedBlocks[i]]);
+    folderContent = realloc(folderContent, (i+1) * BLOCK_SIZE * sizeof(char));
+    strcat(folderContent, disk.blocks[folder.usedBlocks[i]]);
   }
 
-  return currentFolderContent;
+  return folderContent;
+}
+
+void removeFile(char *fileName) {
+  inode_t fileInode;
+  char *currentFolderContent = getFolderContent(currentFolderInode);
+  int i;
+
+  int fileInodeID = fileExists(fileName, '-', currentFolderContent);
+  if (fileInodeID == -1) {
+    nstdError("Le fichier %s n'existe pas.\n", fileName);
+    return;
+  }
+
+  fileInode = getInodeByID(fileInodeID);
+
+  i = 0;
+  while (fileInode.usedBlocks[i] != -1) {
+    strcpy(disk.blocks[fileInode.usedBlocks[i]], "");
+    fileInode.usedBlocks[i] = -1;
+    availableBlocks++;
+    i++;
+  }
+
+  for (i = 0; i < INODES_COUNT; i++) {
+    if (disk.inodes[i].id == fileInodeID) {
+      disk.inodes[i] = fileInode;
+      availableInodes++;
+      break;
+    }
+  }
+
+  saveDisk();
 }
 
 void diskFree() {
