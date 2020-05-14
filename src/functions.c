@@ -46,3 +46,15 @@ char * strDup(char * str) {
 
   return copy;
 }
+
+int countOcc(char *string, char searchedChar) {
+  int length = strlen(string);
+  int i;
+  int count = 0;
+
+  for (i = 0 ; i < length; i++) {
+    if (string[i] == searchedChar) count++;
+  }
+
+  return count;
+}

@@ -41,19 +41,6 @@ typedef struct disk_t {
   block_t blocks[BLOCKS_COUNT];
 } disk_t;
 
-/* // Pair fileName + inode
-typedef struct fileID_t {
-  char fileName;
-  inode_t inode;
-} fileID_t;
-
-// Directory
-typedef struct directory_t {
-  int nothing;
-  fileID_t fileEntities[];
-} directory_t;
- */
-
 // File
 typedef struct file_t {
   int inodeID;
@@ -67,6 +54,7 @@ void initDiskContent();
 void saveDisk();
 void diskFree();
 void testContent();
+void testCount();
 void myls();
 void closeFile(file_t file);
 void removeFile(char *fileName);
@@ -74,17 +62,18 @@ void removeFolder(char * folderName);
 void nstdError(const char *format, ...);
 void writeFile(file_t file, char *buffer, int bufferSize);
 void readFile(file_t file, char **buffer, int bufferSize);
-void moveFile(char *source, char *destination);
-void rewriteFolderContent(inode_t * folderInode, char * folderContent, int usedBlocksCount);
-
+void move(char *source, char *destination);
+void copy(char *source, char *destination);
+void copyFile(inode_t fileInode, char *content);
+void rewriteFolderContent(inode_t * folderInode, char * folderContent);
+void countFolderBlocks(inode_t folderInode, int *blocksNumber);
 
 int changeDirectory(char *newDir);
 int fileExists(char * fileName, char fileType, char * folderContent);
 int getRemainingSpace(char *content);
 
-char *getFolderContent(inode_t folder);
+char *getFileContent(inode_t folder);
 char *getFileNameByID(int inodeID);
-
 
 inode_t getInodeByID(int inodeID);
 inode_t createFile(char * name, char fileType);
