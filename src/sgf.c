@@ -105,7 +105,10 @@ void initDiskContent() {
 /**
  * Creates a new file
  * @param name the file name
- * @param fileType the type of the file (ordinary --> '-' or directory 'd');
+ * @param fileType the type of the file:
+ * - 'l' --> link
+ * - 'd' --> directory
+ * - '-' --> ordinary file
  * @return the inode of the created file
  * */
 inode_t createFile(char * name, char fileType) {
@@ -126,15 +129,6 @@ inode_t createFile(char * name, char fileType) {
     return newFileInode;
   }
 
-  // Get inode of current folder
-  /*for (i = 0; i < INODES_COUNT; i++) {
-    if (strcmp(disk.inodes[i].fileName, currentFolder) ==  0) {
-      currentFolderInode = disk.inodes[i];
-      
-      
-      break;
-    }
-  } */
   i = 0;
   while (currentFolderInode.usedBlocks[i] != -1 && i < BLOCKS_COUNT) {
     usedBlocksCount++;
@@ -189,84 +183,57 @@ inode_t createFile(char * name, char fileType) {
       strcpy(&newFileInode.rights[1], "rw"); 
       strcpy(newFileInode.fileName, name);
       strcat(newFileInode.fileName, "\0");
+
+      goto addParentToNewFolder;
     }
     else {
-      if (availableBlocks >= 2) {
-        for (i = 0; i < BLOCKS_COUNT; i++) {
-          if (strcmp(disk.blocks[i], "") == 0) {
-            usedBlocksCount++;
-            // Use a new block
-            strcpy(disk.blocks[i], newFile);
-
-            for (j = 0; j < BLOCKS_COUNT; newFileInode.usedBlocks[j++] = -1);
-            newFileInode.rights[0] = fileType;
-            strcpy(&newFileInode.rights[1], "rw");
-            strcpy(newFileInode.fileName, name);
-            strcat(newFileInode.fileName, "\0");
-
-            for (j = 0; j < BLOCKS_COUNT; j++) {
-              if (currentFolderInode.usedBlocks[j] == -1) {
-                currentFolderInode.usedBlocks[j] = i;
-                break;
-              }
-            }
-            break;
-          }
-        }
-      }
-      else {
-        nstdError("Impossible de créer le dossier \"%s\". Il n'y a pas assez de place sur le disque.\n");
-        return newFileInode;
-      }
+      goto getNewBlock;
     }
   }
   else {
-    if (availableBlocks >= 2) {
-      for (i = 0; i < BLOCKS_COUNT; i++) {
-        if (strcmp(disk.blocks[i], "") == 0) {
-          usedBlocksCount++;
-          strcpy(disk.blocks[i], newFile);
-
-          for (j = 0; j < BLOCKS_COUNT; newFileInode.usedBlocks[j++] = -1);
-          newFileInode.rights[0] = fileType;
-          strcpy(&newFileInode.rights[1], "rw");
-          //newFileInode.fileName = name;
-          strcpy(newFileInode.fileName, name);
-          strcat(newFileInode.fileName, "\0");
-
-          currentFolderInode.usedBlocks[usedBlocksCount-1] = i;
-          break;
-        }
-      }
-    }
-    else {
-      nstdError("Impossible de créer le dossier \"%s\". Il n'y a pas assez de place sur le disque.\n");
-      return newFileInode;
-    }
+    goto getNewBlock;
   }
 
-  /* If the new file is a directory, it's necessary to add
-  the parent folder path to it, to allow "cd .." execution */
-  if (fileType == 'd') {
-    char currentFolderInodeID[4];
-    sprintf(currentFolderInodeID, "%d", currentFolderInode.id);
-    char * newFolderContent = (char*) malloc(4 + strlen(currentFolderInodeID) * sizeof(char));
-    strcpy(newFolderContent, "<");
-    strcat(newFolderContent, currentFolderInodeID);
-    strcat(newFolderContent, ":..>");
-    
-    int availableBlock;
-
+  getNewBlock:
     for (i = 0; i < BLOCKS_COUNT; i++) {
       if (strcmp(disk.blocks[i], "") == 0) {
-        availableBlock = i;
+        usedBlocksCount++;
+        strcpy(disk.blocks[i], newFile);
+
+        for (j = 0; j < BLOCKS_COUNT; newFileInode.usedBlocks[j++] = -1);
+        newFileInode.rights[0] = fileType;
+        strcpy(&newFileInode.rights[1], "rw");
+        strcpy(newFileInode.fileName, name);
+        strcat(newFileInode.fileName, "\0");
+
+        currentFolderInode.usedBlocks[usedBlocksCount-1] = i;
         break;
       }
     }
-    
-    strcpy(disk.blocks[availableBlock], newFolderContent);
-    newFileInode.usedBlocks[0] = availableBlock;
-  }
+
+  addParentToNewFolder:
+    /* If the new file is a directory, it's necessary to add
+    the parent folder path to it, to allow "cd .." execution */
+    if (fileType == 'd') {
+      char currentFolderInodeID[4];
+      sprintf(currentFolderInodeID, "%d", currentFolderInode.id);
+      char * newFolderContent = (char*) malloc(4 + strlen(currentFolderInodeID) * sizeof(char));
+      strcpy(newFolderContent, "<");
+      strcat(newFolderContent, currentFolderInodeID);
+      strcat(newFolderContent, ":..>");
+      
+      int availableBlock;
+
+      for (i = 0; i < BLOCKS_COUNT; i++) {
+        if (strcmp(disk.blocks[i], "") == 0) {
+          availableBlock = i;
+          break;
+        }
+      }
+      
+      strcpy(disk.blocks[availableBlock], newFolderContent);
+      newFileInode.usedBlocks[0] = availableBlock;
+    }
 
   for (i = 0; i < INODES_COUNT; i++) {
     if (disk.inodes[i].id == currentFolderInode.id) disk.inodes[i] = currentFolderInode;
@@ -835,82 +802,6 @@ void move(char *source, char *destination) {
     }
 
     saveDisk();
- 
-  // The source is a folder
-  /*if (strstr(destination, "/") != NULL) {
-    // Remove '/'
-
-    destination[strlen(destination) - 1] = '\0';
-    printf("dest: %s\n", destination);
-    destinationInodeID = fileExists(destination, 'd', currentFolderContent);
-    // Check if the source folder exists
-    if (destinationInodeID != -1) {
-      destinationInode = getInodeByID(destinationInodeID);
-      // String value of source's inode id
-      char stringValueOfSourceID[4];
-      sprintf(stringValueOfSourceID, "%d", destinationInodeID);
-
-      char *fileToMove = malloc((strlen(source) + 4) * sizeof(char));
-      strcpy(fileToMove, "<");
-      strcat(fileToMove, stringValueOfSourceID);
-      strcat(fileToMove, ":>");
-      strcat(fileToMove, source);
-      strcat(fileToMove, "\0");
-
-      // Last block used by the source folder
-      int lastUsedBlock;
-
-      i = 0;
-      while (destinationInode.usedBlocks[i] != -1 && i < BLOCKS_COUNT) {
-        lastUsedBlock = destinationInode.usedBlocks[i];
-        i++;
-      }
-
-      // Remaining space in the last used block
-      int lbRemainingSpace = getRemainingSpace(disk.blocks[lastUsedBlock]);
-      // Check if there is enough free bytes to add the new entry to the source folder
-      if (lbRemainingSpace >= (strlen(destination) + strlen(FOLDER_DELIMITER))) {
-        strcat(disk.blocks[lastUsedBlock], FOLDER_DELIMITER);
-        strcat(disk.blocks[lastUsedBlock], fileToMove);
-      }
-      else {
-        for (i = 0; i < BLOCKS_COUNT; i++) {
-          // Get a free block
-          if (strcmp(disk.blocks[i], "") == 0) {
-            strcpy(disk.blocks[i], fileToMove);
-            for (j = 0; j < BLOCKS_COUNT; j++) {
-              if (sourceInode.usedBlocks[j] == -1) {
-                sourceInode.usedBlocks[j] = i;
-                break;
-              }
-            }
-            break;
-          }
-        }
-      }
-    }
-    else  {
-      nstdError("Le répertoire %s n'existe pas.\n", destination);
-      return;
-    }
-  }
-  else {
-    destinationInodeID = fileExists(destination, '-', currentFolderContent);
-    if (destinationInodeID != -1) {
-      copy(source, destination);
-      removeFile(source);
-    }
-    else {
-      strcpy(sourceInode.fileName, destination);
-    }
-  }
-
-  for (i = 0 ; i < INODES_COUNT; i++) {
-    if (disk.inodes[i].id == sourceInode.id) {
-      disk.inodes[i] = sourceInode;
-      break;
-    }
-  }*/
 }
 
 
@@ -1175,6 +1066,7 @@ void countFolderBlocks(inode_t folderInode, int *blocksNumber) {
   }
 }
 
+// Displays disk's information
 void diskFree() {
   int remainingSpace = 0;
   int i;
@@ -1186,6 +1078,77 @@ void diskFree() {
   printf("Free inodes:\t%d / %d\n", availableInodes, INODES_COUNT);
   printf("Free blocks:\t%d / %d\n", availableBlocks, BLOCKS_COUNT);
   printf("Free bytes:\t%d / %d\n", remainingSpace, BLOCK_SIZE*BLOCKS_COUNT);
+}
+
+
+/**
+ * Links a file to another one (= symbolic link)
+ * @param file1 is the target file
+ * @param file2 is the link name
+ * @return -1 for fail and 0 for success
+ **/
+int link(char *file1, char *file2) {
+  int i, file1InodeID;
+  char *currentFolderContent = getFileContent(currentFolderInode);
+  if ((file1InodeID = fileExists(file1, 'd', currentFolderContent)) == -1 && (file1InodeID = fileExists(file1, '-', currentFolderContent)) == -1) {
+    nstdError("Le fichier %s n'existe pas.\n", file1);
+    return -1;
+  }
+
+  inode_t file1Inode = getInodeByID(file1InodeID);
+  inode_t file2Inode = createFile(file2, 'l');
+
+  strcpy(file2Inode.fileName, file2);
+  strcpy(file2Inode.rights, "lrw");
+  file2Inode.usedBlocks = file1Inode.usedBlocks;
+
+  for (i = 0; i < INODES_COUNT; i++) {
+    if (disk.inodes[i].id == file2Inode.id) {
+      disk.inodes[i] = file2Inode;
+      break;
+    }
+  }
+
+  return 0;
+}
+
+/**
+ * Deletes a symbolic link
+ * @param link the name of the link to delete
+ **/
+void unlink(char *link) {
+  int i, linkInodeID;
+  char *currentFolderContent = getFileContent(currentFolderInode);
+
+  if ((linkInodeID = fileExists(link, 'l', currentFolderContent)) == -1) {
+    nstdError("Le lien symbolique %s n'existe pas.\n");
+    return;
+  }
+
+  inode_t linkInode = getInodeByID(linkInodeID);
+  strcpy(linkInode.fileName, "");
+  strcpy(linkInode.rights, "");
+  for (i = 0; i < BLOCKS_COUNT; linkInode.usedBlocks[i++] = -1);
+
+  for (i = 0; i < INODES_COUNT; i++) {
+    if (disk.inodes[i].id == linkInode.id) {
+      disk.inodes[i] = linkInode;
+      break;
+    }
+  }
+}
+
+/**
+ * Gets a file from a link. A link correspond to a file if they used the same blocks.
+ * @param linkInode the inode of the link that corresponds to the search file.
+ * @return the founded file.
+ **/
+inode_t getFileFromLink(inode_t linkInode) {
+  int i;
+
+  for (i = 0; i < INODES_COUNT; i++) {
+    if (disk.inodes[i].usedBlocks[0] == linkInode.usedBlocks[0]) return disk.inodes[i];
+  }
 }
 
 // TESTS -------
@@ -1202,7 +1165,6 @@ void testContent() {
     }
   }
 }
-
 
 void testCount() {
   char *c = getFileContent(currentFolderInode);
