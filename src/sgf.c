@@ -484,36 +484,49 @@ void closeFile(file_t file) {
 
 
 void myls() {
-	int i, j;
-  //Split the disk's block content for display
-  
-  int init_size = strlen(*disk.blocks);
-  char delim[] = "||";
-  char * ptr = strtok(*disk.blocks, delim);
-    printf("i: %d, j: %d, strlen: %d\n", i, j, init_size);
-  while (ptr != NULL)
-	{
-		//printf(" %c", disk.inodes[j].rights[0]);
-		if ( disk.inodes[j].rights[0] == '-' ) {
-			printf("[f]");
+	int i,j;
+	char * chaine = (char*) malloc(sizeof(char)*100);
+    strcpy(chaine, "");
+	
+
+	for (i = 0; i < INODES_COUNT; i++) {
+		for (j = 0; j < BLOCKS_COUNT; j++) {
+			if (disk.inodes[i].usedBlocks[j] != -1) {
+				if (strcmp(disk.blocks[disk.inodes[i].usedBlocks[j]], "") != 0) {
+				strcat(chaine,disk.blocks[disk.inodes[i].usedBlocks[j]]);
+				}
+			}
 		}
-		else if ( disk.inodes[j].rights[0] == 'd' ) 
+    }
+  //  printf("%s", chaine);
+    
+    i=0,j=0;
+    int init_size = strlen(chaine);
+    char delim[] = "||";
+	char * ptr = strtok(chaine, delim);
+	while (ptr != NULL)
+	{
+		if ( disk.inodes[j].rights[0] == 'd' ) 
 		{
 			printf("[d]");
-		}			
+		}
+		else
+		{
+		printf("[f]");
+		}
 		for (i=0;i<strlen(ptr);i++)
 		{
-			if(( ptr[i] != '<'  &&  ptr[i] != '>'  && ptr[i] != ':' ) && ( ptr[i]<'0' || ptr[i]>'9' ))
+			if(( ptr[i] != '<'  &&  ptr[i] != '>'  && ptr[i] != ':' && (ptr[i]!='.' && ptr[i+1] !='.')) && ( ptr[i]<'0' || ptr[i]>'9' ))
 			{
 				printf("%c", ptr[i]);
 			}
 		}
 		printf("    ");
 		ptr = strtok(NULL, delim);
-		j++;
-	}
 	
+	}
 	printf("\n");
+	//free(chaine);
 }
 
 /**

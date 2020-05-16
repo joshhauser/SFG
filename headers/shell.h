@@ -1,3 +1,4 @@
+#include "../headers/sgf.h"
 #ifndef SHELL_H
 #define SHELL_H
 #define MAX_READABLE 1000
@@ -7,11 +8,12 @@
 
 char *input,*input1;
 int filepid,fd[2];
+
 char* argval[ARGMAX]; // our local argc, argv
 char inputfile[INPBUF],outputfile[INPBUF];
 void screenfetch();
-void getInput();
-void screenfetch();
+int  getInput();
+void help();
 void launch_shell(int argc, char* argv[]);
 
 #endif

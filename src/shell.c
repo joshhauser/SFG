@@ -4,18 +4,21 @@
 #include <unistd.h>
 #include <string.h>
 
-void prompt() {
-  system("echo [ShellLite]:~$ ");
-}
+/**
+ * trucs a faire :
+ * mettre des saisies sécurisées
+ * changer le pormpt en fonction du repertoire 
+ * ls pour afficher suelement le repertoire courant 
+ * **/
+ 
 
 /*get input containing spaces and tabs and store it in argval*/
-void getInput()
+int getInput()
 {
 	int argcount = 0;
     fflush(stdout); // vider le buffer
     input = NULL;
-   // ssize_t buf = 0;
-    size_t * restrict buf = 0 ;
+    unsigned int buf = 0 ;
     getline(&input,&buf,stdin);
     // Copy into another string if we need to run special executables
     input1 = (char *)malloc(strlen(input) * sizeof(char));
@@ -31,80 +34,108 @@ void getInput()
         else argcount++;
     }
     free(input);
+    return argcount;
 }
 
 //message d'acceuil 
 void screenfetch()
 {
-    char* welcomestr = "\n |￣￣￣￣￣￣￣￣|\n |  BIENVENUE     |\n | SUR MYSHELL    | \n |＿＿＿＿＿＿＿＿| \n(\\__/) ||\n(•ㅅ•) || \n/ 　 づ \n";
+    char* welcomestr = "\n |￣￣￣￣￣￣￣￣|\n |  BIENVENUE     |\n | SUR MYSHELL    | \n |＿＿＿＿＿＿＿＿| \n(\\__/) ||\n(•ㅅ•) || \n/ 　 づ \n (saisir help afin de consulter le manuel) \n";
 
 
     printf("%s",welcomestr);
+}
+void help()
+{
+    char* manstr = "\n |￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣|\n |  MAN:                                                      |\n |     mkdir <nomrepertoire> : creer un repertoire            |\n |     rmdir <nomrepertoire> : supprimer un repertoire        |\n |     touch <nomfichier> : creer un fichier      |\n |     cd <nomrepertoire> : changer le rep courant            |\n |     ls : liste des fichers                                 |\n |     mv source destination : déplacer un fichier            |\n |     rm <nomfichier> : supprimer un fichier                 |\n |     copy <source> <destination> : copier un fichier        |\n |     write <nomfichier> <texte> : ecrire dans un fichier    |\n |     df                                                     |\n |     exit                                                   |\n |＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿| \n(\\__/) ||\n(•ㅅ•) || \n/ 　 づ \n ";
+
+
+    printf("%s",manstr);
 }
 
 void launch_shell(int argc, char* argv[])
 {
 	int exitflag = 0;
 	screenfetch();
-   
+	char *prompt = malloc((116) * sizeof(char));
+	strcat(prompt,"[ShellLite]:~$ ");
+
+	int argcount = 0;
+	
     while(exitflag==0)
     {
-      
-        printf("[ShellLite]:~$ "); //print user prompt
-        getInput();
+        printf("%s",prompt); 
+        argcount = getInput();
 
         if(strcmp(argval[0],"exit")==0 || strcmp(argval[0],"z")==0)
         {
             printf("exit \n");
+           // free(prompt);
             break;
         }
-        else if(strcmp(argval[0],"screenfetch")==0)
+        else if(strcmp(argval[0],"help")==0)
         {
-            screenfetch();
+            help();
         }
         else if(strcmp(argval[0],"mv")==0 )
         {
-           printf("mv \n");
+		   move(argval[1],argval[2]);
         }
-        else if(strcmp(argval[0],"pwd")==0 )
+        else if(strcmp(argval[0],"cd")==0 )
         {
-            printf("pwd \n");
+			changeDirectory(argval[1]);
+			/*if (strcmp(argval[1],"..")!=0)
+			{
+				strcat(prompt,"/");
+				strcat(prompt,argval[1]);
+				strcat(prompt," ");
+			}*/
         }
-        else if(strcmp(argval[0],"cd")==0)
+        else if(strcmp(argval[0],"ls")==0)
         {
-            //char* path = argval[1];
-           printf("cd \n");
+            testContent();
+            myls();
         }
         else if(strcmp(argval[0],"mkdir")==0 )
         {
-           // char* foldername = argval[1];
-            printf("creer \n");
+            createFile(argval[1],'d');
         }
         else if(strcmp(argval[0],"rmdir")==0)
         {
-           // char* foldername = argval[1];
-            printf("suppr \n");
+           	removeFolder(argval[1]);
         }
-        else if(strcmp(argval[0],"clear")==0 )
+        else if(strcmp(argval[0],"touch")==0)
         {
-           printf("clear \n");
+           	createFile(argval[1],'-');
         }
-        
-        else if(strcmp(argval[0],"cp")==0 )
+        else if(strcmp(argval[0],"rm")==0 )
         {
-            //char* file1 = argval[1];
-            //char* file2 = argval[2];
-              printf("cp");
-            /*if(argcount > 2 && strlen(file1) > 0 && strlen(file2) > 0)
+			removeFile(argval[1]);
+		}
+        else if(strcmp(argval[0],"copy")==0 )
+        {
+            char* file1 = argval[1];
+            char* file2 = argval[2];
+            if(argcount > 2 && strlen(file1) > 0 && strlen(file2) > 0)
             {
-                function_cp(file1,file2);
+                copy(argval[1],argval[2]);
             }
             else
             {
                 printf("+--- Error in cp : insufficient parameters\n");
             }
-			*/
-      }
+		}
+		else if(strcmp(argval[0],"write")==0 )
+        {
+			file_t f = openFile(argval[0], W);
+			char *c = argval[2];
+			writeFile(f, c, strlen(c));
+			closeFile(f);
+		}
+		else if(strcmp(argval[0],"df")==0 )
+		{
+			diskFree();
+		}
   
 	}  
 }

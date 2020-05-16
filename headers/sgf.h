@@ -64,6 +64,8 @@ void writeFile(file_t file, char *buffer, int bufferSize);
 void readFile(file_t file, char **buffer, int bufferSize);
 void move(char *source, char *destination);
 void copy(char *source, char *destination);
+inode_t createFile(char * name, char fileType);
+
 void copyFile(inode_t fileInode, char *content);
 void rewriteFolderContent(inode_t * folderInode, char * folderContent);
 void countFolderBlocks(inode_t folderInode, int *blocksNumber);
@@ -76,7 +78,6 @@ char *getFileContent(inode_t folder);
 char *getFileNameByID(int inodeID);
 
 inode_t getInodeByID(int inodeID);
-inode_t createFile(char * name, char fileType);
 file_t openFile(char * fileName, accessMode_e mode);
 
 #endif
