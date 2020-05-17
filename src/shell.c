@@ -6,7 +6,7 @@
 
 /**
  * trucs a faire :
- * mettre des saisies sécurisées
+ * mettre des saisies sécurisées (commande inconnue)
  * changer le pormpt en fonction du repertoire 
  * ls pour afficher suelement le repertoire courant 
  * **/
@@ -70,7 +70,6 @@ void launch_shell(int argc, char* argv[])
         if(strcmp(argval[0],"exit")==0 || strcmp(argval[0],"z")==0)
         {
             printf("exit \n");
-           // free(prompt);
             break;
         }
         else if(strcmp(argval[0],"help")==0)
