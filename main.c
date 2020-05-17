@@ -5,9 +5,10 @@
 #include "headers/sgf.h"
 #include "headers/functions.h"
 
-int main() {
-  initDisk();
-  createFile("abc",'d');
+int main(int argc, char* argv[]){
+   initDisk();
+   launch_shell(argc,argv);
+ /* createFile("abc",'d');
   createFile("def", 'd');
 
   createFile("cactus",'-');
@@ -18,7 +19,6 @@ int main() {
   char s[10] = "cactus";
   char dd[20] = "newFile.txt";
   move(s, dd); 
-
-  testContent();
+  testContent();*/
   return 0;
 }

@@ -58,3 +58,4 @@ int countOcc(char *string, char searchedChar) {
 
   return count;
 }
+

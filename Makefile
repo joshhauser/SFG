@@ -1,7 +1,7 @@
 # Compiler
 CC=gcc
 # Flags for compilation
-CFLAGS=-Wall -lm
+CFLAGS=-Wall 
 # Executable file name
 EXEC=sgf
 # Source files folder
@@ -18,7 +18,7 @@ all: $(EXEC)
 
 # Create executable file with all objects files + main.c
 $(EXEC): $(OBJ)
-	$(CC) $(CFLAGS) main.c $^ -o $@ -g 
+	$(CC) $(CFLAGS) main.c $^ -lm -o  $@ -g
 
 # Create each object file with its source file
 %.o: $(SRCDIR)/%.c
