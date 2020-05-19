@@ -8,7 +8,6 @@
  * trucs a faire :
  * mettre des saisies sécurisées (commande inconnue)
  * changer le pormpt en fonction du repertoire 
- * ls pour afficher suelement le repertoire courant 
  * **/
  
 
@@ -41,10 +40,9 @@ int getInput()
 void screenfetch()
 {
     char* welcomestr = "\n |￣￣￣￣￣￣￣￣|\n |  BIENVENUE     |\n | SUR MYSHELL    | \n |＿＿＿＿＿＿＿＿| \n(\\__/) ||\n(•ㅅ•) || \n/ 　 づ \n (saisir help afin de consulter le manuel) \n";
-
-
     printf("%s",welcomestr);
 }
+
 void help()
 {
     char* manstr = "\n |￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣|\n |  MAN:                                                      |\n |     mkdir <nomrepertoire> : creer un repertoire            |\n |     rmdir <nomrepertoire> : supprimer un repertoire        |\n |     touch <nomfichier> : creer un fichier      |\n |     cd <nomrepertoire> : changer le rep courant            |\n |     ls : liste des fichers                                 |\n |     mv source destination : déplacer un fichier            |\n |     rm <nomfichier> : supprimer un fichier                 |\n |     copy <source> <destination> : copier un fichier        |\n |     write <nomfichier> <texte> : ecrire dans un fichier    |\n |     df                                                     |\n |     exit                                                   |\n |＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿| \n(\\__/) ||\n(•ㅅ•) || \n/ 　 づ \n ";
@@ -83,16 +81,17 @@ void launch_shell(int argc, char* argv[])
         else if(strcmp(argval[0],"cd")==0 )
         {
 			changeDirectory(argval[1]);
-			/*if (strcmp(argval[1],"..")!=0)
-			{
-				strcat(prompt,"/");
-				strcat(prompt,argval[1]);
-				strcat(prompt," ");
-			}*/
+			   
+		    /*if((newDir,"..") != 0){
+			  
+				//strcat(repname,currentFolder);
+				strcat(repname,currentFolder);
+				//strcat(prompt," ");
+		    }*/
+			
         }
         else if(strcmp(argval[0],"ls")==0)
         {
-            testContent();
             myls();
         }
         else if(strcmp(argval[0],"mkdir")==0 )
@@ -126,7 +125,7 @@ void launch_shell(int argc, char* argv[])
 		}
 		else if(strcmp(argval[0],"write")==0 )
         {
-			file_t f = openFile(argval[0], W);
+			file_t f = openFile(argval[1], W);
 			char *c = argval[2];
 			writeFile(f, c, strlen(c));
 			closeFile(f);

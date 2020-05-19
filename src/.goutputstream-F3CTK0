@@ -553,31 +553,32 @@ void myls() {
 		}
 
     
-    i=0,j=2;
-    
+    i=0,j=1;
     int init_size = strlen(chaine);
     char delim[] = "||";
 	char * ptr = strtok(chaine, delim);
 
 	while (ptr != NULL)
-	{ 
+	{
+		if ( disk.inodes[j].rights[0] == 'd' && (ptr[i] !='.' && ptr[i+1] !='.')) 
+		{
+			printf("[d]");
+		}
+		else 
+		{
+			printf("[f]");
+		}
 		
-			if( disk.inodes[j].rights[0] == 'd' ) 
-			{
-				printf("[d]");
-			}
-			else 
-			{
-				printf("[f]");
-			}
-	   
 		for (i=0;i<strlen(ptr);i++)
-		{ 
-			if(( ptr[i] != '<'  &&  ptr[i] != '>'  && ptr[i] != ':' && (ptr[i]!='.' && ptr[i+1] !='.')) && ( ptr[i]<'0' || ptr[i]>'9' ))
+		{ //&& (ptr[i]!='.' && ptr[i+1] !='.')
+			/*if(( ptr[i] != '<'  &&  ptr[i] != '>'  && ptr[i] != ':' && (ptr[i]!='.' && ptr[i+1] !='.')) && ( ptr[i]<'0' || ptr[i]>'9' ))
+			{
+				printf("%c", ptr[i]);
+			}*/
+			if(( ptr[i] == '<'  &&  ptr[i] != '>'  && ptr[i] != ':' && (ptr[i]!='.' && ptr[i+1] !='.')) && ( ptr[i]<'0' || ptr[i]>'9' ))
 			{
 				printf("%c", ptr[i]);
 			}
-			
 		}
 		printf("    ");
 		ptr = strtok(NULL, delim);
