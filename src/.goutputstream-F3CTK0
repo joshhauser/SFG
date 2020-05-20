@@ -10,8 +10,8 @@
 
 /**
  * A faire:
- * - link()
- * - unlink()
+ * - linkFile()
+ * - unlinkFile()
  * - ajout de la date de modification
  **/
 

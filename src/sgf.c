@@ -9,8 +9,8 @@
 
 /**
  * A faire:
- * - link()
- * - unlink()
+ * - linkFile()
+ * - unlinkFile()
  * - ajout de la date de modification
  **/
 
@@ -128,18 +128,6 @@ inode_t createFile(char * name, char fileType) {
     return newFileInode;
   }
 
-<<<<<<< HEAD
-  // Get inode of current folder
-  /*for (i = 0; i < INODES_COUNT; i++) {
-    if (strcmp(disk.inodes[i].fileName, currentFolder) ==  0) {
-      currentFolderInode = disk.inodes[i];
-
-
-      break;
-    }
-  } */
-=======
->>>>>>> dev
   i = 0;
   while (currentFolderInode.usedBlocks[i] != -1 && i < BLOCKS_COUNT) {
     usedBlocksCount++;
@@ -222,19 +210,6 @@ inode_t createFile(char * name, char fileType) {
       }
     }
 
-<<<<<<< HEAD
-  /* If the new file is a directory, it's necessary to add
-  the parent folder path to it, to allow "cd .." execution */
-  if (fileType == 'd') {
-    char currentFolderInodeID[4];
-    sprintf(currentFolderInodeID, "%d", currentFolderInode.id);
-    char * newFolderContent = (char*) malloc(4 + strlen(currentFolderInodeID) * sizeof(char));
-    strcpy(newFolderContent, "<");
-    strcat(newFolderContent, currentFolderInodeID);
-    strcat(newFolderContent, ":..>");
-
-    int availableBlock;
-=======
   addParentToNewFolder:
     /* If the new file is a directory, it's necessary to add
     the parent folder path to it, to allow "cd .." execution */
@@ -245,9 +220,8 @@ inode_t createFile(char * name, char fileType) {
       strcpy(newFolderContent, "<");
       strcat(newFolderContent, currentFolderInodeID);
       strcat(newFolderContent, ":..>");
-      
+
       int availableBlock;
->>>>>>> dev
 
       for (i = 0; i < BLOCKS_COUNT; i++) {
         if (strcmp(disk.blocks[i], "") == 0) {
@@ -255,17 +229,10 @@ inode_t createFile(char * name, char fileType) {
           break;
         }
       }
-      
+
       strcpy(disk.blocks[availableBlock], newFolderContent);
       newFileInode.usedBlocks[0] = availableBlock;
     }
-<<<<<<< HEAD
-
-    strcpy(disk.blocks[availableBlock], newFolderContent);
-    newFileInode.usedBlocks[0] = availableBlock;
-  }
-=======
->>>>>>> dev
 
   for (i = 0; i < INODES_COUNT; i++) {
     if (disk.inodes[i].id == currentFolderInode.id) disk.inodes[i] = currentFolderInode;
@@ -844,11 +811,8 @@ void move(char *source, char *destination) {
     }
 
     saveDisk();
-<<<<<<< HEAD
- }
-=======
 }
->>>>>>> dev
+
 
 
 void copy(char *source, char *destination) {
@@ -1133,7 +1097,7 @@ void diskFree() {
  * @param file2 is the link name
  * @return -1 for fail and 0 for success
  **/
-int link(char *file1, char *file2) {
+int linkFile(char *file1, char *file2) {
   int i, file1InodeID;
   char *currentFolderContent = getFileContent(currentFolderInode);
   if ((file1InodeID = fileExists(file1, 'd', currentFolderContent)) == -1 && (file1InodeID = fileExists(file1, '-', currentFolderContent)) == -1) {
@@ -1146,7 +1110,10 @@ int link(char *file1, char *file2) {
 
   strcpy(file2Inode.fileName, file2);
   strcpy(file2Inode.rights, "lrw");
-  file2Inode.usedBlocks = file1Inode.usedBlocks;
+
+  for (i = 0; i < BLOCKS_COUNT; i++) {
+    file2Inode.usedBlocks[i] = file1Inode.usedBlocks[i];
+  }
 
   for (i = 0; i < INODES_COUNT; i++) {
     if (disk.inodes[i].id == file2Inode.id) {
@@ -1162,7 +1129,7 @@ int link(char *file1, char *file2) {
  * Deletes a symbolic link
  * @param link the name of the link to delete
  **/
-void unlink(char *link) {
+void unlinkFile(char *link) {
   int i, linkInodeID;
   char *currentFolderContent = getFileContent(currentFolderInode);
 
@@ -1191,10 +1158,21 @@ void unlink(char *link) {
  **/
 inode_t getFileFromLink(inode_t linkInode) {
   int i;
+  inode_t fileInode;
+  strcpy(fileInode.fileName, "");
+  strcpy(fileInode.rights, "");
+
+  for (i = 0; i < BLOCKS_COUNT; fileInode.usedBlocks[i++] = -1);
+
 
   for (i = 0; i < INODES_COUNT; i++) {
-    if (disk.inodes[i].usedBlocks[0] == linkInode.usedBlocks[0]) return disk.inodes[i];
+    if (disk.inodes[i].usedBlocks[0] == linkInode.usedBlocks[0]) {
+      fileInode =  disk.inodes[i];
+      break;
+    }
   }
+
+  return fileInode;
 }
 
 // TESTS -------
