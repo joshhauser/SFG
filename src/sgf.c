@@ -2,7 +2,6 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <string.h>
-#include <stdarg.h>
 #include <math.h>
 
 #include "../headers/sgf.h"
@@ -287,20 +286,6 @@ void saveDisk() {
   fclose(diskFile);
 }
 
-/**
- * Displays error with formatted variables
- * @param format the string to display with C format tags
- * @param ... list of args which correspond to C format tags in "format"
- */
-void nstdError(const char *format, ...) {
-    va_list args;
-
-    fprintf(stderr, "Erreur: ");
-    va_start(args, format);
-    vfprintf(stderr, format, args);
-    va_end(args);
-    fprintf(stderr, "\n");
-}
 
 /**
  * Check if a file exists in the current folder
@@ -446,88 +431,7 @@ void rewriteFolderContent(inode_t *folderInode, char *folderContent) {
   }
 }
 
-
-/**
- * Opens a file
- * @param fileName the name of the file to open
- * @param mode the mode for the file opening (R, W, RW)
- * @return the file structure that contains
- * the inode ID of the file + the access mode
- **/
-file_t openFile(char * fileName, accessMode_e mode) {
-  file_t file;
-  char * currentFolderContent = getFileContent(currentFolderInode);
-
-  int fileInodeID = fileExists(fileName, '-', currentFolderContent);
-  if (fileInodeID != -1) {
-    file.inodeID = fileInodeID;
-  }
-  else {
-    inode_t fileInode = createFile(fileName, '-');
-    file.inodeID = fileInode.id;
-  }
-  file.mode = mode;
-
-  return file;
-}
-
-/**
- * Closes a file
- * @param file the structure that corresponds to the file to close
- **/
-void closeFile(file_t file) {
-  if (file.inodeID != -1) {
-    file.inodeID = -1;
-    file.mode = -1;
-  }
-}
-/*
-void myls() {
-	int i,j;
-	char * chaine = (char*) malloc(sizeof(char)*100);
-    strcpy(chaine, "");
-	printf(" %s",currentFolderInode.fileName);
-
-
-		for (j = 0; j < BLOCKS_COUNT; j++) {
-			//if (currentFolderInode.usedBlocks[j] != -1) {
-				if (strcmp(currentFolderInode.usedBlocks[j], "") != 0) {
-				strcat(chaine,currentFolderInode.usedBlocks[j]]);
-				}
-			}
-		}
-    //}
-
-    i=0,j=1;
-    int init_size = strlen(chaine);
-    char delim[] = "||";
-	char * ptr = strtok(chaine, delim);
-
-	while (ptr != NULL)
-	{
-		if ( disk.inodes[j].rights[0] == 'd' )
-		{
-			printf("[d]");
-		}
-		else
-		{
-			printf("[f]");
-		}
-		for (i=0;i<strlen(ptr);i++)
-		{
-			if(( ptr[i] != '<'  &&  ptr[i] != '>'  && ptr[i] != ':' && (ptr[i]!='.' && ptr[i+1] !='.')) && ( ptr[i]<'0' || ptr[i]>'9' ))
-			{
-				printf("%c", ptr[i]);
-			}
-		}
-		printf("    ");
-		ptr = strtok(NULL, delim);
-	j++;
-	}
-	printf("\n");
-}*/
-
-
+// List the files of the current folder
 void myls() {
 	int i,j,k;
 	char * chaine = (char*) malloc(sizeof(char)*100);
@@ -588,12 +492,46 @@ void myls() {
 
 
 /**
+ * Opens a file
+ * @param fileName the name of the file to open
+ * @param mode the mode for the file opening (R, W, RW)
+ * @return the file structure that contains
+ * the inode ID of the file + the access mode
+ **/
+file_t openFile(char * fileName, accessMode_e mode) {
+  file_t file;
+  char * currentFolderContent = getFileContent(currentFolderInode);
+
+  int fileInodeID = fileExists(fileName, '-', currentFolderContent);
+  if (fileInodeID != -1) {
+    file.inodeID = fileInodeID;
+  }
+  else {
+    inode_t fileInode = createFile(fileName, '-');
+    file.inodeID = fileInode.id;
+  }
+  file.mode = mode;
+
+  return file;
+}
+
+/**
+ * Closes a file
+ * @param file the structure that corresponds to the file to close
+ **/
+void closeFile(file_t file) {
+  if (file.inodeID != -1) {
+    file.inodeID = -1;
+    file.mode = -1;
+  }
+}
+
+/**
  * Writes a buffer's content in a file
  * @param file the file to write to
  * @param buffer the content to add to the file
  * @param bufferSize the number of the buffer's bytes
  **/
-
 void writeFile(file_t file, char *buffer, int bufferSize) {
   int i, j, newBlock;
   int bufferPos = 0;
@@ -1042,7 +980,7 @@ int getRemainingSpace(char *content) {
 /**
  * Gets an inode by its id
  * @param inodeID the id of the inode to get
- * @return the founded inode
+ * @return the found inode
  **/
 inode_t getInodeByID(int inodeID) {
   inode_t inode;
@@ -1060,7 +998,7 @@ inode_t getInodeByID(int inodeID) {
 /**
  * Gets a file name by the file's inode id
  * @param inodeID the id of the file's inode
- * @return the founded file name
+ * @return the found file name
  **/
 char *getFileNameByID(int inodeID) {
   int i;

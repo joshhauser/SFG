@@ -17,7 +17,7 @@
 /*get input containing spaces and tabs and store it in argval*/
 int getInput()
 {
-	int argcount = 0;
+		int argcount = 0;
     fflush(stdout); // vider le buffer
     input = NULL;
     size_t buf = 0 ;
@@ -69,52 +69,52 @@ void launch_shell(int argc, char* argv[])
         printf("%s",prompt);
         argcount = getInput();
 
-        if(strcmp(argval[0],"exit")==0 || strcmp(argval[0],"z")==0)
+        if(strcmp(argval[0],"exit") == 0 || strcmp(argval[0],"z") == 0)
         {
             printf("exit \n");
             break;
         }
-        else if(strcmp(argval[0],"help")==0)
+        else if(strcmp(argval[0],"help") == 0)
         {
             help();
         }
-        else if(strcmp(argval[0],"mv")==0 )
+        else if(strcmp(argval[0],"mv") == 0)
         {
-		   move(argval[1],argval[2]);
+		   			move(argval[1],argval[2]);
         }
-        else if(strcmp(argval[0],"cd")==0 )
+        else if(strcmp(argval[0],"cd") == 0)
         {
-			changeDirectory(argval[1]);
+						changeDirectory(argval[1]);
 
-		    /*if((newDir,"..") != 0){
+				    /*if((newDir,"..") != 0){
 
-				//strcat(repname,currentFolder);
-				strcat(repname,currentFolder);
-				//strcat(prompt," ");
-		    }*/
+						//strcat(repname,currentFolder);
+						strcat(repname,currentFolder);
+						//strcat(prompt," ");
+				    }*/
 
         }
-        else if(strcmp(argval[0],"ls")==0)
+        else if(strcmp(argval[0],"ls") == 0)
         {
             myls();
         }
-        else if(strcmp(argval[0],"mkdir")==0 )
+        else if(strcmp(argval[0],"mkdir") == 0)
         {
             createFile(argval[1],'d');
         }
-        else if(strcmp(argval[0],"rmdir")==0)
+        else if(strcmp(argval[0],"rmdir") == 0)
         {
            	removeFolder(argval[1]);
         }
-        else if(strcmp(argval[0],"touch")==0)
+        else if(strcmp(argval[0],"touch") == 0)
         {
            	createFile(argval[1],'-');
         }
-        else if(strcmp(argval[0],"rm")==0 )
+        else if(strcmp(argval[0],"rm") == 0)
         {
-			removeFile(argval[1]);
-		}
-        else if(strcmp(argval[0],"copy")==0 )
+						removeFile(argval[1]);
+				}
+        else if(strcmp(argval[0],"copy") == 0)
         {
             char* file1 = argval[1];
             char* file2 = argval[2];
@@ -126,18 +126,17 @@ void launch_shell(int argc, char* argv[])
             {
                 printf("+--- Error in cp : insufficient parameters\n");
             }
+				}
+				else if(strcmp(argval[0],"write") == 0)
+				{
+						file_t f = openFile(argval[1], W);
+						char *c = argval[2];
+						writeFile(f, c, strlen(c));
+						closeFile(f);
+				}
+				else if(strcmp(argval[0],"df") == 0)
+				{
+						diskFree();
+				}
 		}
-		else if(strcmp(argval[0],"write")==0 )
-        {
-			file_t f = openFile(argval[1], W);
-			char *c = argval[2];
-			writeFile(f, c, strlen(c));
-			closeFile(f);
-		}
-		else if(strcmp(argval[0],"df")==0 )
-		{
-			diskFree();
-		}
-
-	}
 }

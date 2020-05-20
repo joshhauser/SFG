@@ -1119,7 +1119,7 @@ int getRemainingSpace(char *content) {
 /**
  * Gets an inode by its id
  * @param inodeID the id of the inode to get
- * @return the founded inode
+ * @return the found inode
  **/
 inode_t getInodeByID(int inodeID) {
   inode_t inode;
@@ -1137,7 +1137,7 @@ inode_t getInodeByID(int inodeID) {
 /**
  * Gets a file name by the file's inode id
  * @param inodeID the id of the file's inode
- * @return the founded file name
+ * @return the found file name
  **/
 char *getFileNameByID(int inodeID) {
   int i;

@@ -53,7 +53,6 @@ void myls();
 void closeFile(file_t file);
 void removeFile(char *fileName);
 void removeFolder(char * folderName);
-void nstdError(const char *format, ...);
 void writeFile(file_t file, char *buffer, int bufferSize);
 void readFile(file_t file, char **buffer, int bufferSize);
 void move(char *source, char *destination);
