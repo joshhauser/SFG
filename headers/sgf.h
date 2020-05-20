@@ -9,12 +9,6 @@
 #define FOLDER_DELIMITER "||"
 
 // Enums ================
-/* typedef enum fileType_e {
-  TEXT,
-  BINARY, 
-  FOLDER
-} fileType_e; */
-
 typedef enum accessMode_e {
   R, // read
   W, // write

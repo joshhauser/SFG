@@ -7,9 +7,12 @@
 /**
  * trucs a faire :
  * mettre des saisies sécurisées (commande inconnue)
- * changer le pormpt en fonction du repertoire 
+ * changer le pormpt en fonction du repertoire
+ * vérifier le nombre d'arguemnts saisis.
+   Exemple: l'utilsateur saisit la commande "copy", s'il n'y a pas d'arguments alors ça ne peut pas marcher
+   Pareil s'il y a trop d'arguments
  * **/
- 
+
 
 /*get input containing spaces and tabs and store it in argval*/
 int getInput()
@@ -17,12 +20,12 @@ int getInput()
 	int argcount = 0;
     fflush(stdout); // vider le buffer
     input = NULL;
-    unsigned int buf = 0 ;
+    size_t buf = 0 ;
     getline(&input,&buf,stdin);
     // Copy into another string if we need to run special executables
     input1 = (char *)malloc(strlen(input) * sizeof(char));
     strncpy(input1,input,strlen(input));
-    argcount = 0; 
+    argcount = 0;
     while((argval[argcount] = strsep(&input, " \t\n")) != NULL && argcount < ARGMAX-1)
     {
         // do not consider "" as a parameter
@@ -36,7 +39,7 @@ int getInput()
     return argcount;
 }
 
-//message d'acceuil 
+//message d'acceuil
 void screenfetch()
 {
     char* welcomestr = "\n |￣￣￣￣￣￣￣￣|\n |  BIENVENUE     |\n | SUR MYSHELL    | \n |＿＿＿＿＿＿＿＿| \n(\\__/) ||\n(•ㅅ•) || \n/ 　 づ \n (saisir help afin de consulter le manuel) \n";
@@ -56,13 +59,14 @@ void launch_shell(int argc, char* argv[])
 	int exitflag = 0;
 	screenfetch();
 	char *prompt = malloc((116) * sizeof(char));
-	strcat(prompt,"[ShellLite]:~$ ");
+	strcpy(prompt,"[ShellLite]:~$ ");
+  strcat(prompt, "\0");
 
 	int argcount = 0;
-	
+
     while(exitflag==0)
     {
-        printf("%s",prompt); 
+        printf("%s",prompt);
         argcount = getInput();
 
         if(strcmp(argval[0],"exit")==0 || strcmp(argval[0],"z")==0)
@@ -81,14 +85,14 @@ void launch_shell(int argc, char* argv[])
         else if(strcmp(argval[0],"cd")==0 )
         {
 			changeDirectory(argval[1]);
-			   
+
 		    /*if((newDir,"..") != 0){
-			  
+
 				//strcat(repname,currentFolder);
 				strcat(repname,currentFolder);
 				//strcat(prompt," ");
 		    }*/
-			
+
         }
         else if(strcmp(argval[0],"ls")==0)
         {
@@ -134,6 +138,6 @@ void launch_shell(int argc, char* argv[])
 		{
 			diskFree();
 		}
-  
-	}  
+
+	}
 }
