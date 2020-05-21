@@ -5,7 +5,7 @@
 #include <math.h>
 
 #include "../headers/sgf.h"
-#include "../headers/functions.h"
+//#include "../headers/functions.h"
 
 /**
  * A faire:
@@ -400,6 +400,7 @@ void rewriteFolderContent(inode_t *folderInode, char *folderContent) {
 
 // List the files of the current folder
 void myls() {
+	
 	int i,j,k;
 	char * chaine = (char*) malloc(sizeof(char)*100);
     strcpy(chaine, "");
@@ -410,51 +411,43 @@ void myls() {
 		//recuperation du bloc utilisé
 		if (currentFolderInode.usedBlocks[i] != -1)
 		{
-			//printf(" %d",currentFolderInode.usedBlocks[i]);
 			j=currentFolderInode.usedBlocks[i];
 		}
 	}
-
-		for (k = 0; k < BLOCKS_COUNT; k++) {
-			if (disk.inodes[j].usedBlocks[k] != -1) {
-				if (strcmp(disk.blocks[disk.inodes[j].usedBlocks[k]], "") != 0) {
+	//recuperation des fichiers du dossier courant
+	for (k = 0; k < BLOCKS_COUNT; k++) {
+		if (disk.inodes[j].usedBlocks[k] != -1) {
+			if (strcmp(disk.blocks[disk.inodes[j].usedBlocks[k]], "") != 0) {
 				strcat(chaine,disk.blocks[disk.inodes[j].usedBlocks[k]]);
-				}
 			}
 		}
+	}
 
-
-    i=0,j=2;
-
+	
+	i=0,j=1;
+	//manips pour afficher seulement le nom du fichier
     int init_size = strlen(chaine);
     char delim[] = "||";
 	char * ptr = strtok(chaine, delim);
 
 	while (ptr != NULL)
 	{
-
-			if( disk.inodes[j].rights[0] == 'd' )
-			{
-				printf("[d]");
-			}
-			else
-			{
-				printf("[f]");
-			}
-
-		for (i=0;i<strlen(ptr);i++)
+		if( disk.inodes[j].rights[0] == 'd' )
 		{
-			if(( ptr[i] != '<'  &&  ptr[i] != '>'  && ptr[i] != ':' && (ptr[i]!='.' && ptr[i+1] !='.')) && ( ptr[i]<'0' || ptr[i]>'9' ))
-			{
-				printf("%c", ptr[i]);
-			}
-
+			printf("[d]");
 		}
+		else
+		{
+			printf("[f]");
+		}
+		clean_file_name(ptr);
+		printf("%s", ptr);
 		printf("    ");
 		ptr = strtok(NULL, delim);
 	j++;
 	}
 	printf("\n");
+	
 }
 
 

@@ -82,7 +82,49 @@ int countOcc(char *string, char searchedChar) {
 
   return count;
 }
+//remove 1 char
+void remove_char(char* word,int idxToDel)
+{	
+	memmove(&word[idxToDel], &word[idxToDel + 1], strlen(word) - idxToDel);
+}
+//gets rid of the file's index and delimiters
+void clean_file_name(char* word)
+{
+	remove_char(word,strlen(word)-1);
+	remove_char(word,2);
+	remove_char(word,1);
+	remove_char(word,0);
+		
+}
+//removes a substring
+/*void remove_string(char* str,char* str_rem)
+{
+	int i;
+	//for(i=strlen(str_rem);i>0;i--)
+	for(i=0;i<strlen(str_rem);i++)
+	{
+		remove_char(str,i);
+	}
+}*/
 
+void remove_string(char *s, char const *srem) /* Source https://www.developpez.net/forums/d133547/c-cpp/c/enlever-d-chaine/ */
+//Retire une sous chaine d'une chaine 
+{
+  int n = 0;
+  char *p;
+ 
+  if (s && srem)
+  {
+    size_t const len = strlen(srem);
+ 
+    while((p = strstr(s, srem)) != NULL)
+    {
+      memmove(p, p + len, strlen(p + len) + 1);
+      n++;
+    }
+  }
+ 
+}
 
 /**
  * Displays error with formatted variables
