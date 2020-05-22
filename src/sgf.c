@@ -164,8 +164,8 @@ inode_t createFile(char * name, char fileType) {
     currentFolderContent = getFileContent(currentFolderInode);
 
     // Check if file with same name and same type exists
-    if (fileExists(name, '-', currentFolderContent) != -1 || fileExists(name, 'd', currentFolderContent) != -1) {
-      nstdError("Un fichier avec ce nom existe déjà.\n");
+    if (fileExists(name, '-', currentFolderContent) != -1 || fileExists(name, 'd', currentFolderContent) != -1 || fileExists(name, 'l', currentFolderContent) != -1) {
+      nstdError("Le fichier \"%s\" existe déjà.\n", name);
       return newFileInode;
     }
 
@@ -216,7 +216,7 @@ inode_t createFile(char * name, char fileType) {
     if (fileType == 'd') {
       char currentFolderInodeID[4];
       sprintf(currentFolderInodeID, "%d", currentFolderInode.id);
-      char * newFolderContent = (char*) malloc(4 + strlen(currentFolderInodeID) * sizeof(char));
+      char * newFolderContent = (char*) malloc((5 + strlen(currentFolderInodeID) + strlen(currentFolderInodeID)) * sizeof(char));
       strcpy(newFolderContent, "<");
       strcat(newFolderContent, currentFolderInodeID);
       strcat(newFolderContent, ":..>");
@@ -398,20 +398,20 @@ void rewriteFolderContent(inode_t *folderInode, char *folderContent) {
   }
 }
 
-// List the files of the current folder
+// Lists the files of the current folder
 void myls() {
 	
-	int i,j,k;
+	int i, j, k;
 	char * chaine = (char*) malloc(sizeof(char)*100);
-    strcpy(chaine, "");
+  strcpy(chaine, "");
 
 	printf(" %s:   ",currentFolderInode.fileName);
-	for(i = 0;i<BLOCKS_COUNT;i++)
+	for(i = 0; i<BLOCKS_COUNT; i++)
 	{
-		//recuperation du bloc utilisé
+		// Gets used block
 		if (currentFolderInode.usedBlocks[i] != -1)
 		{
-			j=currentFolderInode.usedBlocks[i];
+			j = currentFolderInode.usedBlocks[i];
 		}
 	}
 	//recuperation des fichiers du dossier courant
@@ -645,7 +645,7 @@ void readFile(file_t file, char **buffer, int bufferSize) {
 }
 
 void move(char *source, char *destination) {
-  int i;
+  int i, j;
   char *currentFolderContent = getFileContent(currentFolderInode);
   int sourceInodeID, destinationInodeID;
   inode_t sourceInode, destinationInode;
@@ -727,18 +727,20 @@ void move(char *source, char *destination) {
       currentFolderContent = (char*) malloc(sizeof(char));
       strcpy(currentFolderContent, "");
 
+      j = 0;
       for (i = 0; i < curFolderItemsCount; i++) {
         int curItemInodeID;
         sscanf(currentFolderItems[i], "%*c%d", &curItemInodeID);
-        if (i > 0) strcat(currentFolderContent, FOLDER_DELIMITER);
+        if (i > 0 && j > 1) strcat(currentFolderContent, FOLDER_DELIMITER);
         if (curItemInodeID != sourceInode.id) {
-          currentFolderContent = (char*) realloc(currentFolderContent, (i+3) * strlen(currentFolderItems[i]) * sizeof(char));
+          currentFolderContent = (char*) realloc(currentFolderContent, (strlen(currentFolderContent) + strlen(FOLDER_DELIMITER) + strlen(currentFolderItems[i])) * sizeof(char));
           strcat(currentFolderContent, currentFolderItems[i]);
         }
         else {
-          currentFolderContent = (char*) realloc(currentFolderContent, (i+3) * strlen(fileToMove) * sizeof(char));
+          currentFolderContent = (char*) realloc(currentFolderContent, (strlen(currentFolderContent) + strlen(FOLDER_DELIMITER) + strlen(fileToMove)) * sizeof(char));
           strcat(currentFolderContent, fileToMove);
         }
+        j++;
       }
 
       currentFolderContent = (char*) realloc(currentFolderContent, strlen(currentFolderContent) + 1 * sizeof(char));
@@ -773,14 +775,15 @@ void move(char *source, char *destination) {
   currentFolderContent = (char*) malloc(sizeof(char));
   strcpy(currentFolderContent, "");
 
+  j = 0 ;
   for (i = 0; i < curFolderItemsCount; i++) {
     int curItemInodeID;
     sscanf(currentFolderItems[i], "%*c%d", &curItemInodeID);
     if (curItemInodeID != sourceInode.id) {
-      printf("i: %d\n", i);
-      if (i > 0) strcat(currentFolderContent, FOLDER_DELIMITER);
-      currentFolderContent = (char*) realloc(currentFolderContent, (i+3) * strlen(currentFolderItems[i]) * sizeof(char));
+      if (i > 0  && j > 1) strcat(currentFolderContent, FOLDER_DELIMITER);
+      currentFolderContent = (char*) realloc(currentFolderContent, (i + strlen(FOLDER_DELIMITER) + strlen(currentFolderItems[i])) * sizeof(char));
       strcat(currentFolderContent, currentFolderItems[i]);
+      j++;
     }
   }
 
@@ -789,6 +792,30 @@ void move(char *source, char *destination) {
 
   rewriteFolderContent(&currentFolderInode, currentFolderContent);
 
+  /*** Update source file parent id ***/
+  char strValueOfSrcParentID[4];
+  sprintf(strValueOfSrcParentID, "%d", destinationInode.id);
+
+  char *sourceParent = (char*) malloc((strlen(strValueOfSrcParentID) + 6) * sizeof(char));
+  strcpy(sourceParent, "<");
+  strcat(sourceParent, strValueOfSrcParentID);
+  strcat(sourceParent, ":..>");
+
+  char *sourceContent = getFileContent(sourceInode);
+  int sourceItemsCount;
+  char **sourceItems = splitStr(sourceContent, FOLDER_DELIMITER, &sourceItemsCount);
+  free(sourceContent);
+  sourceContent = (char*) malloc(strlen(sourceParent) * sizeof(char));
+  strcpy(sourceContent, sourceParent);
+  for (i = 1; i < sourceItemsCount; i++) {
+    sourceContent = (char*) realloc(sourceContent, (strlen(sourceContent) + strlen(FOLDER_DELIMITER) + strlen(sourceItems[i])) * sizeof(char));
+    strcat(sourceContent, sourceItems[i]);
+    if (i < (sourceItemsCount - 1)) strcat(sourceContent, FOLDER_DELIMITER);
+  }
+
+  rewriteFolderContent(&sourceInode, sourceContent);
+
+  /*** Update destination content ***/
   destinationContent = (char*) realloc(destinationContent, (strlen(FOLDER_DELIMITER) + strlen(destinationContent) + strlen(fileToMove) + 1) * sizeof(char));
   strcat(destinationContent, FOLDER_DELIMITER);
   strcat(destinationContent, fileToMove);
@@ -833,7 +860,7 @@ void copy(char *source, char *destination) {
 
   // Check if the source file exists
   if ((sourceInodeID = fileExists(source, '-', currentFolderContent)) == -1 && (sourceInodeID = fileExists(source, 'd', currentFolderContent)) == -1) {
-    nstdError("Ce fichier n'existe pas.\n");
+    nstdError("Le fichier \"%s\" n'existe pas.\n", source);
     return;
   }
 
@@ -920,7 +947,7 @@ int changeDirectory(char *newDir) {
   newDirInodeID = fileExists(newDir, 'd', currentFolderContent);
 
   if (newDirInodeID == -1) {
-    nstdError("Le répertoire %s n'existe pas.\n", newDir);
+    nstdError("Le répertoire \"%s\" n'existe pas.\n", newDir);
     return -1;
   }
 
@@ -1004,7 +1031,7 @@ void removeFile(char *fileName) {
 
   int fileInodeID = fileExists(fileName, '-', currentFolderContent);
   if (fileInodeID == -1) {
-    nstdError("Le fichier %s n'existe pas.\n", fileName);
+    nstdError("Le fichier \"%s\" n'existe pas.\n", fileName);
     return;
   }
 
@@ -1093,8 +1120,9 @@ void diskFree() {
 int linkFile(char *file1, char *file2) {
   int i, file1InodeID;
   char *currentFolderContent = getFileContent(currentFolderInode);
+
   if ((file1InodeID = fileExists(file1, 'd', currentFolderContent)) == -1 && (file1InodeID = fileExists(file1, '-', currentFolderContent)) == -1) {
-    nstdError("Le fichier %s n'existe pas.\n", file1);
+    nstdError("Le fichier \"%s\" n'existe pas.\n", file1);
     return -1;
   }
 
@@ -1127,7 +1155,7 @@ void unlinkFile(char *link) {
   char *currentFolderContent = getFileContent(currentFolderInode);
 
   if ((linkInodeID = fileExists(link, 'l', currentFolderContent)) == -1) {
-    nstdError("Le lien symbolique %s n'existe pas.\n");
+    nstdError("Le lien symbolique \"%s\" n'existe pas.\n");
     return;
   }
 
@@ -1142,6 +1170,23 @@ void unlinkFile(char *link) {
       break;
     }
   }
+
+  int currentFolderItemsCount;
+  char ** currentFolderItems = splitStr(currentFolderContent, FOLDER_DELIMITER, &currentFolderItemsCount);
+  strcpy(currentFolderContent, "");
+
+  for (i = 0; i < currentFolderItemsCount; i++) {
+    int currentItemInodeID;
+    sscanf(currentFolderItems[i], "%*c%d", &currentItemInodeID);
+    if (currentItemInodeID != linkInodeID) {
+      if (i > 0) strcat(currentFolderContent, FOLDER_DELIMITER);
+      strcat(currentFolderContent, currentFolderItems[i]);
+    }
+  }
+
+  rewriteFolderContent(&currentFolderInode, currentFolderContent);
+
+  saveDisk();
 }
 
 /**

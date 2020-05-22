@@ -6,8 +6,14 @@
 #include "headers/functions.h"
 
 int main(int argc, char* argv[]){
-   initDisk();
-   launch_shell(argc,argv);
+  initDisk();
+  //launch_shell(argc,argv);
+  createFile("abc",'d');
+  createFile("def", 'd');
+  char s[10] = "abc";
+  char d[10] = "def";
+  move(s, d);
+  testContent();
  /* createFile("abc",'d');
   createFile("def", 'd');
 
