@@ -3,14 +3,13 @@
 #include <unistd.h>
 #include <string.h>
 #include <math.h>
+#include <time.h>
 
 #include "../headers/sgf.h"
 //#include "../headers/functions.h"
 
 /**
  * A faire:
- * - linkFile()
- * - unlinkFile()
  * - ajout de la date de modification
  **/
 
@@ -76,6 +75,12 @@ void initDiskContent() {
   strcat(superInode.fileName, "\0");
   strcpy(superInode.rights, "drw");
 
+  time_t cTime = time(NULL);
+  struct tm currentTime = *localtime(&cTime);
+  superInode.lastChangeDate[0] = currentTime.tm_mday;
+  superInode.lastChangeDate[1] = currentTime.tm_mon + 1;
+  superInode.lastChangeDate[2] = currentTime.tm_year + 1900;
+
   for (i = 0; i < BLOCKS_COUNT; i++) superInode.usedBlocks[i] = -1;
 
   fwrite(&superInode, sizeof(inode_t), 1, diskFile);
@@ -85,6 +90,10 @@ void initDiskContent() {
   strcpy(inode.fileName, "");
   strcat(inode.fileName, "\0");
   strcpy(inode.rights, "");
+
+  inode.lastChangeDate[0] = currentTime.tm_mday;
+  inode.lastChangeDate[1] = currentTime.tm_mon + 1;
+  inode.lastChangeDate[2] = currentTime.tm_year + 1900;
 
   for (i = 0; i < BLOCKS_COUNT; i++) inode.usedBlocks[i] = -1;
   for (i = 1; i < INODES_COUNT; i++) {
@@ -234,6 +243,19 @@ inode_t createFile(char * name, char fileType) {
       newFileInode.usedBlocks[0] = availableBlock;
     }
 
+
+  time_t cTime = time(NULL);
+  struct tm currentTime = *localtime(&cTime);
+
+  currentFolderInode.lastChangeDate[0] = currentTime.tm_mday;
+  currentFolderInode.lastChangeDate[1] = currentTime.tm_mon + 1;
+  currentFolderInode.lastChangeDate[2] = currentTime.tm_year + 1900;
+
+  newFileInode.lastChangeDate[0] = currentTime.tm_mday;
+  newFileInode.lastChangeDate[1] = currentTime.tm_mon + 1;
+  newFileInode.lastChangeDate[2] = currentTime.tm_year + 1900;
+
+
   for (i = 0; i < INODES_COUNT; i++) {
     if (disk.inodes[i].id == currentFolderInode.id) disk.inodes[i] = currentFolderInode;
     if (disk.inodes[i].id == newFileInode.id) disk.inodes[i] = newFileInode;
@@ -336,6 +358,13 @@ void removeFolder(char * folderName) {
   strcpy(folderInode.fileName, "");
   strcpy(disk.blocks[folderInode.usedBlocks[0]], "");
   folderInode.usedBlocks[0] = -1;
+
+  time_t cTime = time(NULL);
+  struct tm currentTime = *localtime(&cTime);
+  folderInode.lastChangeDate[0] = currentTime.tm_mday;
+  folderInode.lastChangeDate[1] = currentTime.tm_mon + 1;
+  folderInode.lastChangeDate[2] = currentTime.tm_year + 1900;
+
   availableBlocks++;
 
   for (i = 0; i < INODES_COUNT; i++) {
@@ -593,6 +622,13 @@ void writeFile(file_t file, char *buffer, int bufferSize) {
     fileInode.usedBlocks[usedBlocksCount-1] = newBlock;
   }
 
+  
+  time_t cTime = time(NULL);
+  struct tm currentTime = *localtime(&cTime);
+  fileInode.lastChangeDate[0] = currentTime.tm_mday;
+  fileInode.lastChangeDate[1] = currentTime.tm_mon + 1;
+  fileInode.lastChangeDate[2] = currentTime.tm_year + 1900;
+
   // Update inode
   for (i = 0; i < INODES_COUNT; i++) {
     if (disk.inodes[i].id == fileInode.id) {
@@ -703,6 +739,17 @@ void move(char *source, char *destination) {
     }
     else {
       strcpy(sourceInode.fileName, destination);
+
+      time_t cTime = time(NULL);
+      struct tm currentTime = *localtime(&cTime);
+      sourceInode.lastChangeDate[0] = currentTime.tm_mday;
+      sourceInode.lastChangeDate[1] = currentTime.tm_mon + 1;
+      sourceInode.lastChangeDate[2] = currentTime.tm_year + 1900;
+
+      currentFolderInode.lastChangeDate[0] = currentTime.tm_mday;
+      currentFolderInode.lastChangeDate[1] = currentTime.tm_mon + 1;
+      currentFolderInode.lastChangeDate[2] = currentTime.tm_year + 1900;
+
       for (i = 0; i < INODES_COUNT; i++) {
         if (disk.inodes[i].id == sourceInode.id) {
           disk.inodes[i] = sourceInode;
@@ -792,6 +839,13 @@ void move(char *source, char *destination) {
 
   rewriteFolderContent(&currentFolderInode, currentFolderContent);
 
+  time_t cTime = time(NULL);
+  struct tm currentTime = *localtime(&cTime);
+  currentFolderInode.lastChangeDate[0] = currentTime.tm_mday;
+  currentFolderInode.lastChangeDate[1] = currentTime.tm_mon + 1;
+  currentFolderInode.lastChangeDate[2] = currentTime.tm_year + 1900;
+
+
   /*** Update source file parent id ***/
   char strValueOfSrcParentID[4];
   sprintf(strValueOfSrcParentID, "%d", destinationInode.id);
@@ -823,6 +877,10 @@ void move(char *source, char *destination) {
   changeDirectory(destination);
   rewriteFolderContent(&destinationInode, destinationContent);
   changeDirectory("..");
+
+  destinationInode.lastChangeDate[0] = currentTime.tm_mday;
+  destinationInode.lastChangeDate[1] = currentTime.tm_mon + 1;
+  destinationInode.lastChangeDate[2] = currentTime.tm_year + 1900;
 
   saveChanges:
     for (i = 0; i < INODES_COUNT; i++) {
@@ -1063,6 +1121,12 @@ void removeFile(char *fileName) {
   strcpy(fileInode.fileName, "");
   strcpy(fileInode.rights, "");
 
+  time_t cTime = time(NULL);
+  struct tm currentTime = *localtime(&cTime);
+  fileInode.lastChangeDate[0] = currentTime.tm_mday;
+  fileInode.lastChangeDate[1] = currentTime.tm_mon + 1;
+  fileInode.lastChangeDate[2] = currentTime.tm_year + 1900;
+
   for (i = 0; i < INODES_COUNT; i++) {
     if (disk.inodes[i].id == currentFolderInode.id) {
       disk.inodes[i] = currentFolderInode;
@@ -1162,6 +1226,13 @@ void unlinkFile(char *link) {
   inode_t linkInode = getInodeByID(linkInodeID);
   strcpy(linkInode.fileName, "");
   strcpy(linkInode.rights, "");
+
+  time_t cTime = time(NULL);
+  struct tm currentTime = *localtime(&cTime);
+  linkInode.lastChangeDate[0] = currentTime.tm_mday;
+  linkInode.lastChangeDate[1] = currentTime.tm_mon + 1;
+  linkInode.lastChangeDate[2] = currentTime.tm_year + 1900;
+
   for (i = 0; i < BLOCKS_COUNT; linkInode.usedBlocks[i++] = -1);
 
   for (i = 0; i < INODES_COUNT; i++) {
@@ -1183,6 +1254,10 @@ void unlinkFile(char *link) {
       strcat(currentFolderContent, currentFolderItems[i]);
     }
   }
+
+  currentFolderInode.lastChangeDate[0] = currentTime.tm_mday;
+  currentFolderInode.lastChangeDate[1] = currentTime.tm_mon + 1;
+  currentFolderInode.lastChangeDate[2] = currentTime.tm_year + 1900;
 
   rewriteFolderContent(&currentFolderInode, currentFolderContent);
 

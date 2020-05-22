@@ -25,6 +25,7 @@ typedef struct inode_t {
   unsigned int id;
   char fileName[100];
   char rights[3];
+  int lastChangeDate[3];
   int usedBlocks[BLOCKS_COUNT];
 } inode_t;
 
