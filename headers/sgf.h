@@ -1,3 +1,5 @@
+#include "../headers/functions.h"
+
 #ifndef DISK_H
 #define DISK_H
 
@@ -9,12 +11,6 @@
 #define FOLDER_DELIMITER "||"
 
 // Enums ================
-/* typedef enum fileType_e {
-  TEXT,
-  BINARY, 
-  FOLDER
-} fileType_e; */
-
 typedef enum accessMode_e {
   R, // read
   W, // write
@@ -59,25 +55,28 @@ void myls();
 void closeFile(file_t file);
 void removeFile(char *fileName);
 void removeFolder(char * folderName);
-void nstdError(const char *format, ...);
 void writeFile(file_t file, char *buffer, int bufferSize);
 void readFile(file_t file, char **buffer, int bufferSize);
 void move(char *source, char *destination);
 void copy(char *source, char *destination);
-inode_t createFile(char * name, char fileType);
-
 void copyFile(inode_t fileInode, char *content);
 void rewriteFolderContent(inode_t * folderInode, char * folderContent);
 void countFolderBlocks(inode_t folderInode, int *blocksNumber);
+void unlinkFile(char *link);
 
 int changeDirectory(char *newDir);
 int fileExists(char * fileName, char fileType, char * folderContent);
 int getRemainingSpace(char *content);
+int linkFile(char *file1, char *file2);
+
 
 char *getFileContent(inode_t folder);
 char *getFileNameByID(int inodeID);
 
+inode_t createFile(char * name, char fileType);
 inode_t getInodeByID(int inodeID);
+inode_t getFileFromLink(inode_t linkInode);
+
 file_t openFile(char * fileName, accessMode_e mode);
 
 #endif

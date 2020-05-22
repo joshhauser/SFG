@@ -11,9 +11,11 @@ int filepid,fd[2];
 
 char* argval[ARGMAX]; // our local argc, argv
 char inputfile[INPBUF],outputfile[INPBUF];
-void screenfetch();
+
 int  getInput();
+
 void help();
+void screenfetch();
 void launch_shell(int argc, char* argv[]);
 
 #endif
