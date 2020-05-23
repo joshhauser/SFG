@@ -1,5 +1,3 @@
-#include "../headers/functions.h"
-
 #ifndef DISK_H
 #define DISK_H
 
@@ -25,7 +23,7 @@ typedef struct inode_t {
   unsigned int id;
   char fileName[100];
   char rights[3];
-  int lastChangeDate[3];
+  int lastModificationDate[3];
   int usedBlocks[BLOCKS_COUNT];
 } inode_t;
 
@@ -64,8 +62,8 @@ void copyFile(inode_t fileInode, char *content);
 void rewriteFolderContent(inode_t * folderInode, char * folderContent);
 void countFolderBlocks(inode_t folderInode, int *blocksNumber);
 void unlinkFile(char *link);
+void changeDirectory(char *newDir);
 
-int changeDirectory(char *newDir);
 int fileExists(char * fileName, char fileType, char * folderContent);
 int getRemainingSpace(char *content);
 int linkFile(char *file1, char *file2);
