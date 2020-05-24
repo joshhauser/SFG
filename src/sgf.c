@@ -1195,7 +1195,7 @@ void copyFile(inode_t fileInode, char *content)
  * Changes the current directory
  * @param newDir the new directory
  **/
-void changeDirectory(char *newDir)
+int changeDirectory(char *newDir)
 {
   int newDirInodeID;
   char *currentFolderContent = getFileContent(currentFolderInode);
@@ -1205,10 +1205,11 @@ void changeDirectory(char *newDir)
   if (newDirInodeID == -1)
   {
     nstdError("Le répertoire \"%s\" n'existe pas.\n", newDir);
-    return;
+    return -1;
   }
 
   currentFolderInode = getInodeByID(newDirInodeID);
+  return 0;
 }
 
 /**

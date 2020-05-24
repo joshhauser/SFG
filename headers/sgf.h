@@ -62,7 +62,7 @@ void copyFile(inode_t fileInode, char *content);
 void rewriteFolderContent(inode_t * folderInode, char * folderContent);
 void countFolderBlocks(inode_t folderInode, int *blocksNumber);
 void unlinkFile(char *link);
-void changeDirectory(char *newDir);
+int changeDirectory(char *newDir);
 
 int fileExists(char * fileName, char fileType, char * folderContent);
 int getRemainingSpace(char *content);
