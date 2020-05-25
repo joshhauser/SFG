@@ -492,58 +492,34 @@ void rewriteFolderContent(inode_t *folderInode, char *folderContent)
   }
 }
 
-// Lists the files of the current folder
 void myls()
 {
-
-  int i, j, k;
-  char *chaine = (char *)malloc(sizeof(char) * 100);
-  strcpy(chaine, "");
-
-  printf(" %s:   ", currentFolderInode.fileName);
-  for (i = 0; i < BLOCKS_COUNT; i++)
-  {
-    // Gets used block
-    if (currentFolderInode.usedBlocks[i] != -1)
-    {
-      j = currentFolderInode.usedBlocks[i];
-    }
-  }
-  //recuperation des fichiers du dossier courant
-  for (k = 0; k < BLOCKS_COUNT; k++)
-  {
-    if (disk.inodes[j].usedBlocks[k] != -1)
-    {
-      if (strcmp(disk.blocks[disk.inodes[j].usedBlocks[k]], "") != 0)
-      {
-        strcat(chaine, disk.blocks[disk.inodes[j].usedBlocks[k]]);
-      }
-    }
-  }
-
-  i = 0, j = 1;
+  char *currentFolderContent = getFileContent(currentFolderInode);
   //manips pour afficher seulement le nom du fichier
-  int init_size = strlen(chaine);
+  int init_size = strlen(currentFolderContent);
   char delim[] = "||";
-  char *ptr = strtok(chaine, delim);
-
+  char *ptr = strtok(currentFolderContent, delim);
+  int id=0;
+  inode_t inod;
+ 
   while (ptr != NULL)
   {
-    if (disk.inodes[j].rights[0] == 'd')
+    id = ptr[1]-'0';  //converts char id into int
+    inod=getInodeByID(id);
+    if ( inod.rights[0] == 'd')
     {
-      printf("[d]");
-    }
-    else
+		printf("[d]");
+	}
+	else
     {
       printf("[f]");
     }
     clean_file_name(ptr);
     printf("%s", ptr);
     printf("    ");
-    ptr = strtok(NULL, delim);
-    j++;
-  }
-  printf("\n");
+	ptr = strtok(NULL, delim);
+ }
+ printf("\n");
 }
 
 /**

@@ -49,7 +49,6 @@ int getInput()
 	
     }
     free(input);
-    printf("%d \n ",argcount);
     return argcount;
 }
 
@@ -142,6 +141,7 @@ void launch_shell(int argc, char* argv[])
         else if(strcmp(argval[0],"ls")==0)
         {
             myls();
+            //testContent();
         }
         else if(strcmp(argval[0],"mkdir")==0 )
         {
