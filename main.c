@@ -13,7 +13,7 @@ int main(int argc, char* argv[]){
   //char s[10] = "abc";
   //char d[10] = "def";
   //move(s, d);
-  testContent();
+  //testContent();
 
   return 0;
 }
