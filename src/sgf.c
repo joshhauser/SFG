@@ -329,8 +329,11 @@ int fileExists(char *fileName, char fileType, char *folderContent)
     char **folderItems = splitStr(folderContent, FOLDER_DELIMITER, &folderItemsCount);
     for (i = 0; i < folderItemsCount; i++)
     {
-      // Checks if the current element of folderItems contains fileName as a substring
-      if (strstr(folderItems[i], fileName) != NULL)
+      char *currentItem = (char*) malloc(strlen(folderItems[i]) * sizeof(char));
+      sscanf(folderItems[i], "%*c%*d:%s", currentItem);
+      currentItem[strlen(currentItem) - 1] = '\0';
+
+      if (strcmp(currentItem, fileName) == 0)
       {
         int currentItemInodeID;
         // Gets the inode id of the current item
@@ -764,7 +767,7 @@ void readFile(file_t file, char **buffer, int bufferSize)
   strcpy(fileContent, "");
   for (i = 0; i < usedBlocksCount; i++)
   {
-    fileContent = (char *)realloc(fileContent, ((i + 1) * BLOCK_SIZE) * sizeof(char));
+    fileContent = (char*) realloc(fileContent, ((i + 1) * BLOCK_SIZE) * sizeof(char));
     strcat(fileContent, disk.blocks[fileInode.usedBlocks[i]]);
   }
 
@@ -841,8 +844,11 @@ void move(char *source, char *destination)
   }
   else
   {
+    printf("destination: %s\n", destination);
+    printf("---> %d\n", fileExists(destination, '-', currentFolderContent));
     if (sourceInode.rights[0] == '-' && (destinationInodeID = fileExists(destination, '-', currentFolderContent)) != -1)
     {
+      printf("fichier\n");
       char *sourceContent = getFileContent(sourceInode);
       int sourceContentLength = strlen(sourceContent);
       file_t target = openFile(destination, W);
@@ -908,18 +914,18 @@ void move(char *source, char *destination)
           strcat(currentFolderContent, FOLDER_DELIMITER);
         if (curItemInodeID != sourceInode.id)
         {
-          currentFolderContent = (char *)realloc(currentFolderContent, (strlen(currentFolderContent) + strlen(FOLDER_DELIMITER) + strlen(currentFolderItems[i])) * sizeof(char));
+          currentFolderContent = (char*) realloc(currentFolderContent, (strlen(currentFolderContent) + strlen(FOLDER_DELIMITER) + strlen(currentFolderItems[i])) * sizeof(char));
           strcat(currentFolderContent, currentFolderItems[i]);
         }
         else
         {
-          currentFolderContent = (char *)realloc(currentFolderContent, (strlen(currentFolderContent) + strlen(FOLDER_DELIMITER) + strlen(fileToMove)) * sizeof(char));
+          currentFolderContent = (char*) realloc(currentFolderContent, (strlen(currentFolderContent) + strlen(FOLDER_DELIMITER) + strlen(fileToMove)) * sizeof(char));
           strcat(currentFolderContent, fileToMove);
         }
         j++;
       }
 
-      currentFolderContent = (char *)realloc(currentFolderContent, strlen(currentFolderContent) + 1 * sizeof(char));
+      currentFolderContent = (char* )realloc(currentFolderContent, strlen(currentFolderContent) + 1 * sizeof(char));
       currentFolderContent[strlen(currentFolderContent)] = '\0';
 
       rewriteFolderContent(&currentFolderInode, currentFolderContent);
@@ -967,15 +973,15 @@ void move(char *source, char *destination)
     sscanf(currentFolderItems[i], "%*c%d", &curItemInodeID);
     if (curItemInodeID != sourceInode.id)
     {
-      if (i > 0 && j > 1)
+      if (i > 0 && j > 0)
         strcat(currentFolderContent, FOLDER_DELIMITER);
-      currentFolderContent = (char *)realloc(currentFolderContent, (i + strlen(FOLDER_DELIMITER) + strlen(currentFolderItems[i])) * sizeof(char));
+      currentFolderContent = (char*) realloc(currentFolderContent, (strlen(currentFolderContent) + strlen(FOLDER_DELIMITER) + strlen(currentFolderItems[i])) * sizeof(char));
       strcat(currentFolderContent, currentFolderItems[i]);
       j++;
     }
   }
 
-  currentFolderContent = (char *)realloc(currentFolderContent, strlen(currentFolderContent) + 1 * sizeof(char));
+  currentFolderContent = (char*) realloc(currentFolderContent, strlen(currentFolderContent) + 1 * sizeof(char));
   currentFolderContent[strlen(currentFolderContent)] = '\0';
 
   rewriteFolderContent(&currentFolderInode, currentFolderContent);
@@ -1015,7 +1021,7 @@ void move(char *source, char *destination)
     // Re-adds other items
     for (i = 1; i < sourceItemsCount; i++)
     {
-      sourceContent = (char *)realloc(sourceContent, (strlen(sourceContent) + strlen(FOLDER_DELIMITER) + strlen(sourceItems[i])) * sizeof(char));
+      sourceContent = (char*) realloc(sourceContent, (strlen(sourceContent) + strlen(FOLDER_DELIMITER) + strlen(sourceItems[i]) + 1) * sizeof(char));
       strcat(sourceContent, sourceItems[i]);
       if (i < (sourceItemsCount - 1))
         strcat(sourceContent, FOLDER_DELIMITER);
@@ -1025,7 +1031,7 @@ void move(char *source, char *destination)
   }
 
   /*** Update destination content ***/
-  destinationContent = (char *)realloc(destinationContent, (strlen(FOLDER_DELIMITER) + strlen(destinationContent) + strlen(fileToMove) + 1) * sizeof(char));
+  destinationContent = (char*) realloc(destinationContent, (strlen(FOLDER_DELIMITER) + strlen(destinationContent) + strlen(fileToMove) + 1) * sizeof(char));
   strcat(destinationContent, FOLDER_DELIMITER);
   strcat(destinationContent, fileToMove);
 
