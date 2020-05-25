@@ -366,6 +366,7 @@ void removeFolder(char *folderName)
   int i;
 
   int folderInodeID = fileExists(folderName, 'd', currentFolderContent);
+
   if (folderInodeID == -1)
   {
     nstdError("Le répertoire \"%s\" n'existe pas.\n", folderName);
@@ -382,7 +383,7 @@ void removeFolder(char *folderName)
   // Check if the folder is empty: if it is, the only item should be the link to the parent directory
   if (folderItemsCount > 1)
   {
-    nstdError("Le répertoire \"%s\" n'est pas vide\n");
+    nstdError("Le répertoire \"%s\" n'est pas vide\n", folderName);
     return;
   }
 

@@ -62,7 +62,7 @@ void screenfetch()
 
 void help()
 {
-    char* manstr = "\n |￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣|\n |  MAN:                                                      |\n |     mkdir <nomrepertoire> : creer un repertoire            |\n |     rmdir <nomrepertoire> : supprimer un repertoire        |\n |     touch <nomfichier> : creer un fichier      |\n |     cd <nomrepertoire> : changer le rep courant            |\n |     ls : liste des fichers                                 |\n |     mv source destination : déplacer un fichier            |\n |     rm <nomfichier> : supprimer un fichier                 |\n |     copy <source> <destination> : copier un fichier        |\n |     write <nomfichier> <texte> : ecrire dans un fichier    |\n |     df                                                     |\n |     exit                                                   |\n |＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿| \n(\\__/) ||\n(•ㅅ•) || \n/ 　 づ \n ";
+    char* manstr = "\n |￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣|\n |  MAN:                                                      |\n |     mkdir <nomrepertoire> : creer un repertoire            |\n |     rmdir <nomrepertoire> : supprimer un repertoire        |\n |     touch <nomfichier> : creer un fichier      |\n |     cd <nomrepertoire> : changer le rep courant            |\n |     ls : liste des fichers                                 |\n |     mv source destination : déplacer un fichier            |\n |     rm <nomfichier> : supprimer un fichier                 |\n |     cp <source> <destination> : copier un fichier        |\n |     write <nomfichier> <texte> : ecrire dans un fichier    |\n |     df                                                     |\n |     exit                                                   |\n |＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿| \n(\\__/) ||\n(•ㅅ•) || \n/ 　 づ \n ";
 
 
     printf("%s",manstr);
@@ -187,7 +187,7 @@ void launch_shell(int argc, char* argv[])
 				removeFile(argval[1]);
 			}
 		}
-        else if(strcmp(argval[0],"copy")==0 )
+        else if(strcmp(argval[0],"cp")==0 )
         {
             char* file1 = argval[1];
             char* file2 = argval[2];
