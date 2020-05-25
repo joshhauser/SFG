@@ -49,7 +49,6 @@ void initDiskContent();
 void saveDisk();
 void diskFree();
 void testContent();
-void testCount();
 void myls();
 void closeFile(file_t file);
 void removeFile(char *fileName);
