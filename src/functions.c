@@ -96,17 +96,6 @@ void clean_file_name(char* word)
 	remove_char(word,0);
 		
 }
-//removes a substring
-/*void remove_string(char* str,char* str_rem)
-{
-	int i;
-	//for(i=strlen(str_rem);i>0;i--)
-	for(i=0;i<strlen(str_rem);i++)
-	{
-		remove_char(str,i);
-	}
-}*/
-
 void remove_string(char *s, char const *srem) /* Source https://www.developpez.net/forums/d133547/c-cpp/c/enlever-d-chaine/ */
 //Retire une sous chaine d'une chaine 
 {

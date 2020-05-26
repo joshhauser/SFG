@@ -143,6 +143,17 @@ void launch_shell(int argc, char* argv[])
             myls();
             //testContent();
         }
+        else if(strcmp(argval[0],"lsall")==0)
+        {
+            mylsall();
+            testContent();
+        }
+        else if(strcmp(argval[0],"echo")==0)
+        {
+    
+                echoTxt(funcArgCount,argval[1]);
+            
+        }
         else if(strcmp(argval[0],"mkdir")==0 )
         {
 			if ( funcArgCount != 2 )
