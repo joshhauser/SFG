@@ -494,9 +494,9 @@ void rewriteFolderContent(inode_t *folderInode, char *folderContent)
 
 void myls()
 {
-  char *currentFolderContent = getFileContent(currentFolderInode);
+   char *currentFolderContent = getFileContent(currentFolderInode);     
   //manips pour afficher seulement le nom du fichier
-  int init_size = strlen(currentFolderContent);
+  //int init_size = strlen(currentFolderContent);
   char delim[] = "||";
   char *ptr = strtok(currentFolderContent, delim);
   int id=0;
@@ -522,47 +522,34 @@ void myls()
  }
  printf("\n");
 }
-
-void mylsall()
-{
-	int i, j;
-	char * chaine = (char*) malloc(sizeof(char)*500);
-	strcpy(chaine, "");
-	int id=0;
+//affiche les fichiers du dossier courant avec la date et les droits
+void lsdatesRights(){
+	int i = 0 ;
 	inode_t inod;
-  
-	//recuperation de tous les fichiers du disque 
-	for (i = 0; i < INODES_COUNT; i++)
-	  {
-		for (j = 0; j < BLOCKS_COUNT; j++)
-		{
-		  if (disk.inodes[i].usedBlocks[j] != -1)
-		  {
-			if (strcmp(disk.blocks[disk.inodes[i].usedBlocks[j]], "") != 0)
-			{
-			  strcat(chaine,disk.blocks[disk.inodes[i].usedBlocks[j]]);
-			}
-		  }
-		}
-	}
-	strcat(chaine,"\0");
-	//manips pour l'affichage
-	i=0;
-    int init_size = strlen(chaine);
-    char delim[] = "||";
-	char * ptr = strtok(chaine, delim);
-	int x=0;
-
-	while (ptr != NULL)
+	char delim[] = "||";
+	//on affiche maintenant le contenu de chaque repertoire:
+	int id = 0;
+	//on recupere le contenu du repertoire courant 
+	char *currentFolderContent = getFileContent(currentFolderInode);
+	int x;
+	char *ptr1 = strtok(currentFolderContent, delim);
+	while (ptr1 != NULL)
 	{
-		id = ptr[1]-'0';  //converts char id into int
-		inod=getInodeByID(id);
-		//affichage des droits 
-		for(i=0;i<4;i++)
+		//affichage du nom des fichiers 
+		//si c un repertoire pére:
+		if ( ptr1[i] == '<' && (ptr1[i+1] >= '0' || ptr1[i+1] <= '9' ) && ptr1[i+2]==':' && ptr1[i+3]=='.' && ptr1[i+4]=='.' && ptr1[i+5]=='>' )
 		{
-			printf("%c", inod.rights[i]);
+			ptr1 = strtok(NULL, delim);
 		}
-		printf("    ");
+		else{
+		//remove_string(ptr1,":");
+		id = ptr1[1]-'0';  //converts char id into int
+		inod=getInodeByID(id);
+		for (i=0;i<3;i++)
+		{
+			printf("%c",inod.rights[i]);
+		}
+		printf("      ");
 		//affichage de la date
 		for(i=0;i<3;i++)
 		{
@@ -590,28 +577,75 @@ void mylsall()
 				printf("%d    ", inod.lastModificationDate[i]);
 			}
 		}
-		//affichage du nom des fichiers 
-		remove_string(ptr,"<0:..>");
-		clean_file_name(ptr);
-		remove_string(ptr,">");
-		remove_string(ptr,":");
-		for(i=0;i<strlen(ptr);i++)
-		{
-			if ( ptr[i] == '<' && (ptr[i+1] >= '0' || ptr[i+1] <= '9' ))
-			{
-				remove_char(ptr,i+1);
-				remove_char(ptr,i);
-			}
+		printf("     ");
+		clean_file_name(ptr1);
+		printf("%s \n", ptr1);		
+		ptr1 = strtok(NULL, delim);
 		}
-		remove_string(ptr,"..");
-		printf("%s \n", ptr);
-		ptr = strtok(NULL, delim);
-
 	}
-	printf("\n");
-	free(chaine);
 }
 
+void mylsall()
+{
+	int i,j;
+	char * chaine = (char*) malloc(sizeof(char)*600); //contient le contenu de tous les blocs 
+	strcpy(chaine, "");
+	char** folders = NULL ; //contient tout les repertoires
+	folders = malloc(20 * sizeof(char*)); //Supposons qu'il y a 20 repertoires
+    for (i=0;i<10;i++)
+    {
+		folders[i]= malloc(30*sizeof(char));
+		folders[i]="";
+    }
+    
+	int nbf; //number of folders
+	inode_t inodact;
+	inodact = currentFolderInode;
+	//on parcourt le disque
+	for (i = 0; i < INODES_COUNT; i++)
+	{
+		for (j = 0; j < BLOCKS_COUNT; j++)
+		{
+		  if (disk.inodes[i].usedBlocks[j] != -1)
+		  {
+			if (strcmp(disk.blocks[disk.inodes[i].usedBlocks[j]], "") != 0)
+			{
+			    strcat(chaine,disk.blocks[disk.inodes[i].usedBlocks[j]]);
+			}
+		  }
+		}
+	}
+	i=0;
+	
+	//on selectionne seulement les repertoires et on les stoque dans un tableau  
+	char delim[] = "||";
+    char * ptr = strtok(chaine, delim); 
+    inode_t inod;
+    int id = 0;
+	while (ptr != NULL)
+    {
+		id = ptr[1]-'0';  //converts char id into int
+		inod=getInodeByID(id);
+		if ( inod.rights[0] == 'd')
+		{
+			folders[i] = ptr;
+			i++;
+		}
+	  
+		ptr = strtok(NULL, delim);
+    }
+	nbf = i;
+	//on affiche maintenant le contenu de chaque repertoire:
+	currentFolderInode = disk.inodes[0];
+	lsdatesRights();
+	for(i=0;i<nbf;i++)
+	{
+		id = folders[i][1]-'0';
+		currentFolderInode = getInodeByID(id);
+		lsdatesRights();		
+	} 
+	currentFolderInode = inodact;
+}
 /**
  * Opens a file
  * @param fileName the name of the file to open

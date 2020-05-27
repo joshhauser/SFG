@@ -146,7 +146,7 @@ void launch_shell(int argc, char* argv[])
         else if(strcmp(argval[0],"lsall")==0)
         {
             mylsall();
-            testContent();
+            //testContent();
         }
         else if(strcmp(argval[0],"echo")==0)
         {
