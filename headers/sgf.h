@@ -50,6 +50,7 @@ void saveDisk();
 void diskFree();
 void testContent();
 void myls();
+void lsdatesRights();
 void mylsall();
 void closeFile(file_t file);
 void removeFile(char *fileName);
