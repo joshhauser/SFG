@@ -140,7 +140,7 @@ inode_t createFile(char *name, char fileType)
   char availableInodeID[4];
 
   // Checks file name length
-  if (strlen(name) > 100)
+  if (strlen(name) > 50)
   {
     nstdError("Veuillez choisir un nom de moins de 100 caractères.\n");
     return newFileInode;
