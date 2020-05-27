@@ -141,18 +141,10 @@ void launch_shell(int argc, char* argv[])
         else if(strcmp(argval[0],"ls")==0)
         {
             myls();
-            //testContent();
         }
         else if(strcmp(argval[0],"lsall")==0)
         {
             mylsall();
-            //testContent();
-        }
-        else if(strcmp(argval[0],"echo")==0)
-        {
-    
-                echoTxt(funcArgCount,argval[1]);
-            
         }
         else if(strcmp(argval[0],"mkdir")==0 )
         {
@@ -211,12 +203,37 @@ void launch_shell(int argc, char* argv[])
                 printf("+--- Error in cp : parametres insuffisants \n");
             }
 		}
-		else if(strcmp(argval[0],"write")==0 )
-        {
-			file_t f = openFile(argval[1], W);
-			char *c = argval[2];
-			writeFile(f, c, strlen(c));
-			closeFile(f);
+		else if(strcmp(argval[0],"echo")==0 )
+        {	
+			if (funcArgCount>=4)
+			{
+				char* chaine = malloc((300) * sizeof(char));
+				strcpy(chaine,"");
+				char* destination = argval[i+1];
+				for(i = 1;i<funcArgCount ;i++)
+				{
+					if ( strcmp(argval[i],">") == 0 )
+					{
+						destination = argval[i+1];
+					}
+					strcat(chaine,argval[i]);
+					strcat(chaine," ");
+				}
+				remove_string(chaine,destination);
+				if ( strchr(chaine,'>') != NULL )
+				{
+					remove_string(chaine,">");
+					echo(chaine,destination);
+				}
+				else 
+				{
+					printf("+---- Error: saisir echo texte > destination\n");
+				}
+		    }
+		    else 
+		    {
+				printf("+---- Error: saisir echo texte > destination\n");
+		    }
 		}
 		else if(strcmp(argval[0],"df")==0 )
 		{

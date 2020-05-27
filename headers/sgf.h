@@ -64,6 +64,7 @@ void rewriteFolderContent(inode_t * folderInode, char * folderContent);
 void countFolderBlocks(inode_t folderInode, int *blocksNumber);
 void unlinkFile(char *link);
 int changeDirectory(char *newDir);
+void echo(char* text,char* destination);
 
 int fileExists(char * fileName, char fileType, char * folderContent);
 int getRemainingSpace(char *content);
@@ -78,5 +79,4 @@ inode_t getInodeByID(int inodeID);
 inode_t getFileFromLink(inode_t linkInode);
 
 file_t openFile(char * fileName, accessMode_e mode);
-void echoTxt(int argcount,char *argval);
 #endif

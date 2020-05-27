@@ -523,6 +523,7 @@ void myls()
  printf("\n");
 }
 //affiche les fichiers du dossier courant avec la date et les droits
+
 void lsdatesRights(){
 	int i = 0 ;
 	inode_t inod;
@@ -1664,32 +1665,14 @@ void testContent()
   }
 }
 
-void echoTxt(int argcount,char *argval) //Commande pour écrire une chaine de caractère donnée en paramètre dans un fichier
+void echo(char* text,char* destination) //Commande pour écrire une chaine de caractère donnée en paramètre dans un fichier
 {
-	testContent();
-	/*
-    int i;
-    file_t* fd;
-    inode_t inode;
-    block_t block;
-    if (argcount < 3)
-    {
-        printf("Usage: echo <dest> <texte>\n");
-    }
-    else
-    {
-        fd= fopen(argval[1],"wb");
-        {
-            char str[256];
-            for (i = 2 ; i < argcount ; i++)
-            {
-                strcat(str,argval[i]);
-                if (i!=argcount-1)
-                    strcat(str," ");
-            }
-            fwrite(&block,size(block_t),1,fd);
-            fclose(fd);
-        }
-    }
-    * */
+	file_t file;
+	char* str;
+	str = text;
+    file = openFile(destination,W);
+    writeFile(file,str,strlen(str));
+    closeFile(file);
+    testContent();
 }
+
