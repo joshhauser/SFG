@@ -492,58 +492,124 @@ void rewriteFolderContent(inode_t *folderInode, char *folderContent)
   }
 }
 
-// Lists the files of the current folder
 void myls()
 {
-
-  int i, j, k;
-  char *chaine = (char *)malloc(sizeof(char) * 100);
-  strcpy(chaine, "");
-
-  printf(" %s:   ", currentFolderInode.fileName);
-  for (i = 0; i < BLOCKS_COUNT; i++)
-  {
-    // Gets used block
-    if (currentFolderInode.usedBlocks[i] != -1)
-    {
-      j = currentFolderInode.usedBlocks[i];
-    }
-  }
-  //recuperation des fichiers du dossier courant
-  for (k = 0; k < BLOCKS_COUNT; k++)
-  {
-    if (disk.inodes[j].usedBlocks[k] != -1)
-    {
-      if (strcmp(disk.blocks[disk.inodes[j].usedBlocks[k]], "") != 0)
-      {
-        strcat(chaine, disk.blocks[disk.inodes[j].usedBlocks[k]]);
-      }
-    }
-  }
-
-  i = 0, j = 1;
+  char *currentFolderContent = getFileContent(currentFolderInode);
   //manips pour afficher seulement le nom du fichier
-  int init_size = strlen(chaine);
+  int init_size = strlen(currentFolderContent);
   char delim[] = "||";
-  char *ptr = strtok(chaine, delim);
-
+  char *ptr = strtok(currentFolderContent, delim);
+  int id=0;
+  inode_t inod;
+ 
   while (ptr != NULL)
   {
-    if (disk.inodes[j].rights[0] == 'd')
+    id = ptr[1]-'0';  //converts char id into int
+    inod=getInodeByID(id);
+    if ( inod.rights[0] == 'd')
     {
-      printf("[d]");
-    }
-    else
+		printf("[d]");
+	}
+	else
     {
       printf("[f]");
     }
     clean_file_name(ptr);
+    remove_string(ptr,":");
     printf("%s", ptr);
     printf("    ");
-    ptr = strtok(NULL, delim);
-    j++;
-  }
-  printf("\n");
+	ptr = strtok(NULL, delim);
+ }
+ printf("\n");
+}
+
+void mylsall()
+{
+	int i, j;
+	char * chaine = (char*) malloc(sizeof(char)*500);
+	strcpy(chaine, "");
+	int id=0;
+	inode_t inod;
+  
+	//recuperation de tous les fichiers du disque 
+	for (i = 0; i < INODES_COUNT; i++)
+	  {
+		for (j = 0; j < BLOCKS_COUNT; j++)
+		{
+		  if (disk.inodes[i].usedBlocks[j] != -1)
+		  {
+			if (strcmp(disk.blocks[disk.inodes[i].usedBlocks[j]], "") != 0)
+			{
+			  strcat(chaine,disk.blocks[disk.inodes[i].usedBlocks[j]]);
+			}
+		  }
+		}
+	}
+	strcat(chaine,"\0");
+	//manips pour l'affichage
+	i=0;
+    int init_size = strlen(chaine);
+    char delim[] = "||";
+	char * ptr = strtok(chaine, delim);
+	int x=0;
+
+	while (ptr != NULL)
+	{
+		id = ptr[1]-'0';  //converts char id into int
+		inod=getInodeByID(id);
+		//affichage des droits 
+		for(i=0;i<4;i++)
+		{
+			printf("%c", inod.rights[i]);
+		}
+		printf("    ");
+		//affichage de la date
+		for(i=0;i<3;i++)
+		{
+			if(i<2)
+			{
+				if(i==1)
+				{
+					x=inod.lastModificationDate[i];
+					if (x<=9 || x >=1) //on ajoute un 0 car le mois est de type int 
+					{
+						printf("0%d/", x);
+					}
+					else
+					{
+						printf("%d/", x);
+					}	
+				}
+				else
+				{
+					printf("%d/", inod.lastModificationDate[i]);
+				}
+			}
+			else //on enleve le / a la fin 
+			{
+				printf("%d    ", inod.lastModificationDate[i]);
+			}
+		}
+		//affichage du nom des fichiers 
+		remove_string(ptr,"<0:..>");
+		clean_file_name(ptr);
+		remove_string(ptr,">");
+		remove_string(ptr,":");
+		for(i=0;i<strlen(ptr);i++)
+		{
+			if ( ptr[i] == '<' && (ptr[i+1] >= '0' || ptr[i+1] <= '9' ))
+			{
+				remove_char(ptr,i+1);
+				remove_char(ptr,i);
+			}
+		}
+		remove_string(ptr,"..");
+		printf("%s \n", ptr);
+		ptr = strtok(NULL, delim);
+
+	}
+	printf("\n");
+	free(chaine);
 }
 
 /**
@@ -1562,4 +1628,34 @@ void testContent()
       }
     }
   }
+}
+
+void echoTxt(int argcount,char *argval) //Commande pour écrire une chaine de caractère donnée en paramètre dans un fichier
+{
+	testContent();
+	/*
+    int i;
+    file_t* fd;
+    inode_t inode;
+    block_t block;
+    if (argcount < 3)
+    {
+        printf("Usage: echo <dest> <texte>\n");
+    }
+    else
+    {
+        fd= fopen(argval[1],"wb");
+        {
+            char str[256];
+            for (i = 2 ; i < argcount ; i++)
+            {
+                strcat(str,argval[i]);
+                if (i!=argcount-1)
+                    strcat(str," ");
+            }
+            fwrite(&block,size(block_t),1,fd);
+            fclose(fd);
+        }
+    }
+    * */
 }

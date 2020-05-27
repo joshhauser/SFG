@@ -50,6 +50,7 @@ void saveDisk();
 void diskFree();
 void testContent();
 void myls();
+void mylsall();
 void closeFile(file_t file);
 void removeFile(char *fileName);
 void removeFolder(char * folderName);
@@ -76,5 +77,5 @@ inode_t getInodeByID(int inodeID);
 inode_t getFileFromLink(inode_t linkInode);
 
 file_t openFile(char * fileName, accessMode_e mode);
-
+void echoTxt(int argcount,char *argval);
 #endif
