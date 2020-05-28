@@ -84,7 +84,7 @@ void launchShell(int argc, char* argv[])
 	strcpy(prompt,"");
 	strcat(prompt,"[ShellLite]:~$ ");
 	strcat(prompt,folder[0]);
-    strcat(prompt,"\0");
+  strcat(prompt,"\0");
     
 	int funcArgCount = 0;
 	
@@ -230,7 +230,7 @@ void launchShell(int argc, char* argv[])
 				if ( strchr(chaine,'>') != NULL )
 				{
 					remove_string(chaine,">");
-					echo(chaine,destination);
+					echoToFile(chaine,destination);
 				}
 				else 
 				{

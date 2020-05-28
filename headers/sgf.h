@@ -67,7 +67,7 @@ void copyFile(inode_t fileInode, char *content);
 void rewriteFolderContent(inode_t *folderInode, char *folderContent);
 void countFolderBlocks(inode_t folderInode, int *blocksNumber);
 void unlinkFile(char *link);
-void echo(char *text, char *destination);
+void echoToFile(char *text, char *destination);
 void chmod(char *fileName, char *droit);
 void lsRights(char *fileName);
 

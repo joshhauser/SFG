@@ -532,7 +532,8 @@ void myls()
 }
 
 
-// Displays current folder's content with the rights for each item
+/* Displays current folder's content with the 
+rights for each item in the current folder */
 void lsDateRights()
 {
   int i = 0;
@@ -595,69 +596,50 @@ void lsDateRights()
   }
 }
 
-void mylsAll()
-{
+// Displays rights and last modification date for all items of the disk
+void mylsAll() {
   int i, j;
-  char *chaine = (char *) malloc(sizeof(char) * 600); //contient le contenu de tous les blocs
-  strcpy(chaine, "");
-  char **folders = NULL;                 //contient tout les repertoires
-  folders = malloc(20 * sizeof(char *)); //Supposons qu'il y a 20 repertoires
-  for (i = 0; i < 10; i++)
-  {
-    folders[i] = malloc(30 * sizeof(char));
-    folders[i] = "";
-  }
+  char *diskContent = (char*) malloc(sizeof(char));
+  strcpy(diskContent, "");
 
-  int foldersCount;
-  inode_t inodact;
-  inodact = currentFolderInode;
-  //on parcourt le disque
-  for (i = 0; i < INODES_COUNT; i++)
-  {
-    for (j = 0; j < BLOCKS_COUNT; j++)
-    {
-      if (disk.inodes[i].usedBlocks[j] != -1)
-      {
-        if (strcmp(disk.blocks[disk.inodes[i].usedBlocks[j]], "") != 0)
-        {
-          strcat(chaine, disk.blocks[disk.inodes[i].usedBlocks[j]]);
+  for (i = 0; i < INODES_COUNT; i++) {
+    if (disk.inodes[i].rights[0] == 'd') {
+      for (j = 0; j < BLOCKS_COUNT; j++) {
+        if (disk.inodes[i].usedBlocks[j] != -1) {
+          diskContent = (char*) realloc(diskContent, (strlen(diskContent) + strlen(disk.blocks[disk.inodes[i].usedBlocks[j]]) + 2) * sizeof(char));
+          // Adds the folder delimiter if the string diskContent is not empty
+          if (strlen(diskContent) > 0) strcat(diskContent, FOLDER_DELIMITER);
+          // Adds the current folder's content
+          strcat(diskContent, disk.blocks[disk.inodes[i].usedBlocks[j]]);
         }
       }
     }
   }
-  i = 0;
 
-  //on selectionne seulement les repertoires et on les stoque dans un tableau
-  char delim[] = "||";
-  char *ptr = strtok(chaine, delim);
-  inode_t inod;
-  int id = 0;
-  while (ptr != NULL)
-  {
-    id = ptr[1] - '0'; //converts char id into int
-    inod = getInodeByID(id);
-    if (inod.rights[0] == 'd')
-    {
-      folders[i] = ptr;
-      i++;
-    }
 
-    ptr = strtok(NULL, delim);
-  }
-  foldersCount = i;
-  //on affiche maintenant le contenu de chaque repertoire:
-  currentFolderInode = disk.inodes[0];
+  // Number of items in the disk's folders
+  int diskFoldersItemsCount;
+  // Disk's folders items
+  char **diskFoldersItems = splitStr(diskContent, FOLDER_DELIMITER, &diskFoldersItemsCount);
+
+  // Displays date & rights for current folder's items
   lsDateRights();
-  for (i = 0; i < foldersCount; i++)
+  for (i = 0; i < diskFoldersItemsCount; i++)
   {
-    id = folders[i][1] - '0';
-    currentFolderInode = getInodeByID(id);
-    lsDateRights();
+    if (strstr(diskFoldersItems[i], "..") == NULL) {
+      int currentItemInodeID;
+      sscanf(diskFoldersItems[i], "%*c%d", &currentItemInodeID);
+      inode_t currentItemInode = getInodeByID(currentItemInodeID);
+      if (currentItemInode.rights[0] == 'd')
+      {
+        currentFolderInode = currentItemInode;
+        lsDateRights();
+      }
+    }
   }
-  currentFolderInode = inodact;
+
+  currentFolderInode = disk.inodes[0];
 }
-
-
 
 /**
  * Opens a file
@@ -847,7 +829,7 @@ writeFileContent:
 }
 
 /**
- * Read a file and put its content in a buffer
+ * Reads a file and put its content in a buffer
  * @param file the file to read
  * @param buffer the buffer in which the content is put
  * @param bufferSize the number of bytes to put in the buffer
@@ -957,11 +939,8 @@ void move(char *source, char *destination)
   }
   else
   {
-    printf("destination: %s\n", destination);
-    printf("---> %d\n", fileExists(destination, '-', currentFolderContent));
     if (sourceInode.rights[0] == '-' && (destinationInodeID = fileExists(destination, '-', currentFolderContent)) != -1)
     {
-      printf("fichier\n");
       char *sourceContent = getFileContent(sourceInode);
       int sourceContentLength = strlen(sourceContent);
       file_t target = openFile(destination, W);
@@ -1113,7 +1092,7 @@ void move(char *source, char *destination)
     char strValueOfSrcParentID[4];
     sprintf(strValueOfSrcParentID, "%d", destinationInode.id);
 
-    // Create the string for the link between the moved file and its parent folder
+    // Creates the string for the link between the moved file and its parent folder
     char *sourceParent = (char *)malloc((strlen(strValueOfSrcParentID) + 6) * sizeof(char));
     strcpy(sourceParent, "<");
     strcat(sourceParent, strValueOfSrcParentID);
@@ -1142,7 +1121,7 @@ void move(char *source, char *destination)
     rewriteFolderContent(&sourceInode, sourceContent);
   }
 
-  /*** Update destination content ***/
+  /*** Updates destination content ***/
   destinationContent = (char *)realloc(destinationContent, (strlen(FOLDER_DELIMITER) + strlen(destinationContent) + strlen(fileToMove) + 1) * sizeof(char));
   strcat(destinationContent, FOLDER_DELIMITER);
   strcat(destinationContent, fileToMove);
@@ -1169,7 +1148,7 @@ saveChanges:
 }
 
 /**
- * Copy a file
+ * Copies a file
  * @param source the file to copy
  * @param destination the destination in which the file will be copied
  **/
@@ -1200,7 +1179,7 @@ void copy(char *source, char *destination)
     destination[strlen(destination) - 1] = '\0';
   }
 
-  // Check if the source file exists
+  // Checks if the source file exists
   if ((sourceInodeID = fileExists(source, '-', currentFolderContent)) == -1 && (sourceInodeID = fileExists(source, 'd', currentFolderContent)) == -1 && (sourceInodeID = fileExists(source, 'l', currentFolderContent)) == -1)
   {
     nstdError("Le fichier \"%s\" n'existe pas.\n", source);
@@ -1250,13 +1229,14 @@ void copy(char *source, char *destination)
       nstdError("Impossible de copier un répertoire dans un fichier.\n");
       return;
     }
+
     file_t copy = openFile(destination, W);
     int contentLength = strlen(sourceFileContent);
     writeFile(copy, sourceFileContent, contentLength);
     closeFile(copy);
   }
 
-  // Update inodes array
+  // Updates inodes array
   for (i = 0; i < INODES_COUNT; i++)
   {
     if (disk.inodes[i].id == sourceInode.id)
@@ -1627,22 +1607,35 @@ void unlinkFile(char *link)
 
   saveDisk();
 }
+
+/**
+ * Displays file content
+ * @param filename the name of the file from which
+ * the content is displayed
+ **/
 void cat(char *fileName)
 {
+  int fileInodeID;
+  char *currentFolderContent = getFileContent(currentFolderInode);
+
+  if ((fileInodeID = fileExists(fileName, '-', currentFolderContent)) == -1) {
+    nstdError("Le fichier \"%s\" n'existe pas.\n", fileName);
+    return;
+  }
+
   file_t file;
   int i = 0;
   int size = getFileSize(fileName);
   char *buffer = NULL;
+  
   file = openFile(fileName, R);
   readFile(file, &buffer, size);
   for (i = 0; i < size - 3; i++)
   {
     printf("%c", buffer[i]);
   }
-  //closeFile(file);
   printf("\n");
   closeFile(file);
-  // printf("taille: %d",size);
 }
 
 /**
@@ -1672,6 +1665,12 @@ inode_t getFileFromLink(inode_t linkInode)
   return fileInode;
 }
 
+/**
+ * Gets size of an ordinary file
+ * @param fileName the name of the file of which
+ * the size is computed
+ * @return the file's size
+ **/
 int getFileSize(char *fileName)
 {
   int fileInodeID;
@@ -1699,27 +1698,13 @@ int getFileSize(char *fileName)
   return fileSize;
 }
 
-// TEST -------
-void testContent()
-{
-  int i, j;
-
-  for (i = 0; i < INODES_COUNT; i++)
-  {
-    for (j = 0; j < BLOCKS_COUNT; j++)
-    {
-      if (disk.inodes[i].usedBlocks[j] != -1)
-      {
-        if (strcmp(disk.blocks[disk.inodes[i].usedBlocks[j]], "") != 0)
-        {
-          printf("contenu en [%d, %d]: %s\n", i, j, disk.blocks[disk.inodes[i].usedBlocks[j]]);
-        }
-      }
-    }
-  }
-}
-
-void echo(char *text, char *destination) //Commande pour écrire une chaine de caractère donnée en paramètre dans un fichier
+/**
+ * Writes in a file a text got from a call to "echo"
+ * @param text the text to write
+ * @param destination the file in which the text
+ * is written
+ **/
+void echoToFile(char *text, char *destination)
 {
   file_t file;
   char *str;
@@ -1729,33 +1714,42 @@ void echo(char *text, char *destination) //Commande pour écrire une chaine de c
   closeFile(file);
 }
 
+/**
+ * Displays rights for a file
+ * @param fileName the file of which the rights are displayed
+ **/
 void lsRights(char *fileName)
 {
   char *currentFolderContent = getFileContent(currentFolderInode);
   int id = 0;
-  inode_t inod;
+  inode_t inode;
   int i = 0;
-  //on retrouve l'inode du fichier
+ 
   id = fileExists(fileName, '-', currentFolderContent);
   if (id != -1)
   {
-    inod = getInodeByID(id);
+    inode = getInodeByID(id);
     printf("%s : ", fileName);
     for (i = 0; i < 3; i++)
     {
-      printf("%c ", inod.rights[i]);
+      printf("%c ", inode.rights[i]);
     }
     printf("\n");
   }
 }
 
+/**
+ * Changes rights for a file
+ * @param fileName the file of which the rights are changed
+ * @param rights the rights to add/remove from the file
+ **/
 void chmod(char *fileName, char *rights)
 {
   char *currentFolderContent = getFileContent(currentFolderInode);
   int id = 0;
-  //on retrouve l'inode du fichier
+
   id = fileExists(fileName, '-', currentFolderContent);
-  //on se place dans l'inode afin de la modifier
+
   if (id != -1)
   {
     if (strcmp(rights, "+r") == 0)
