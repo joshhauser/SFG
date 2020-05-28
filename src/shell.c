@@ -146,6 +146,14 @@ void launch_shell(int argc, char* argv[])
         {
             mylsall();
         }
+	else if(strcmp(argval[0],"lsR")==0)
+        {
+	    lsRights(argval[1]);
+        }
+        else if (strcmp(argval[0],"chmod")==0)
+        {
+	   chmod(argval[1],argval[2]);
+	}
         else if(strcmp(argval[0],"mkdir")==0 )
         {
 			if ( funcArgCount != 2 )
