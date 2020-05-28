@@ -71,7 +71,7 @@ void lsRights(char* fileName);
 int fileExists(char * fileName, char fileType, char * folderContent);
 int getRemainingSpace(char *content);
 int linkFile(char *file1, char *file2);
-
+int getFileSize(char *fileName)
 
 char *getFileContent(inode_t folder);
 char *getFileNameByID(int inodeID);

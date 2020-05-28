@@ -1645,6 +1645,30 @@ inode_t getFileFromLink(inode_t linkInode)
   return fileInode;
 }
 
+int getFileSize(char *fileName) {
+  int fileInodeID;
+  inode_t fileInode;
+  int i = 0;
+  int fileSize = 0;
+  char *currentFolderContent = getFileContent(currentFolderInode);
+  
+  fileInodeID = fileExists(fileName, '-', currentFolderContent);
+
+  if (fileInodeID == -1) {
+    nstdError("Le fichier \"%s\" n'existe pas.\n", fileName);
+    return -1;
+  }
+
+  fileInode = getInodeByID(fileInodeID);
+
+  while (fileInode.usedBlocks[i] != -1) {
+    fileSize += strlen(disk.blocks[fileInode.usedBlocks[i]]);
+    i++;
+  }
+
+  return fileSize;
+}
+
 // TEST -------
 void testContent()
 {
@@ -1697,7 +1721,7 @@ void lsRights(char* fileName)
 }
 
 
-void chmod(char* fileName,char* droit)
+void chmod(char* fileName, char* rights)
 {
 	char *currentFolderContent = getFileContent(currentFolderInode);
 	int id = 0;	
@@ -1706,31 +1730,33 @@ void chmod(char* fileName,char* droit)
 	//on se place dans l'inode afin de la modifier
 	if ( id != -1)
 	{
-		if(strcmp(droit,"+r")==0)
+		if(strcmp(rights,"+r")==0)
 		{
 			disk.inodes[id].rights[1] = 'r'; 
 		}
-		else if(strcmp(droit,"-r")==0)
+		else if(strcmp(rights,"-r")==0)
 		{
 			disk.inodes[id].rights[1] = '-'; 
 		}
-		else if(strcmp(droit,"+w")==0)
+		else if(strcmp(rights,"+w")==0)
 		{
 			disk.inodes[id].rights[2] = 'w'; 
 		}
-		else if(strcmp(droit,"-w")==0)
+		else if(strcmp(rights,"-w")==0)
 		{
 			disk.inodes[id].rights[2] = '-'; 
 		}
-		else if(strcmp(droit,"+rw")==0)
+		else if(strcmp(rights,"+rw")==0)
 		{
 			disk.inodes[id].rights[1] = '-'; 
 			disk.inodes[id].rights[2] = '-'; 
 		}
-		else if(strcmp(droit,"-rw")==0)
+		else if(strcmp(rights,"-rw")==0)
 		{
 			disk.inodes[id].rights[1] = '-';
 			disk.inodes[id].rights[2] = '-'; 
 		}
 	}
+
+  saveDisk();
 }
