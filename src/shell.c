@@ -36,9 +36,6 @@ int getInput()
     input = NULL;
     unsigned int buf = 0 ;
     getline(&input,&buf,stdin);
-    // Copy into another string if we need to run special executables
-    input1 = (char *)malloc(strlen(input) * sizeof(char));
-    strncpy(input1,input,strlen(input));
     argcount = 0; 
     while((argval[argcount] = strsep(&input, " \t\n")) != NULL && argcount < ARGMAX-1)
     {
@@ -146,14 +143,14 @@ void launch_shell(int argc, char* argv[])
         {
             mylsall();
         }
-	else if(strcmp(argval[0],"lsR")==0)
+	    else if(strcmp(argval[0],"lsR")==0)
         {
-	    lsRights(argval[1]);
+			lsRights(argval[1]);
         }
         else if (strcmp(argval[0],"chmod")==0)
         {
-	   chmod(argval[1],argval[2]);
-	}
+			chmod(argval[1],argval[2]);
+	    }
         else if(strcmp(argval[0],"mkdir")==0 )
         {
 			if ( funcArgCount != 2 )
@@ -242,6 +239,10 @@ void launch_shell(int argc, char* argv[])
 		    {
 				printf("+---- Error: saisir echo texte > destination\n");
 		    }
+		}
+		else if (strcmp(argval[0],"cat")==0 )
+		{
+			cat(argval[1]);
 		}
 		else if(strcmp(argval[0],"df")==0 )
 		{
