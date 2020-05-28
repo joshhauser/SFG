@@ -65,6 +65,8 @@ void countFolderBlocks(inode_t folderInode, int *blocksNumber);
 void unlinkFile(char *link);
 int changeDirectory(char *newDir);
 void echo(char* text,char* destination);
+void chmod(char* fileName,char* droit);
+void lsRights(char* fileName);
 
 int fileExists(char * fileName, char fileType, char * folderContent);
 int getRemainingSpace(char *content);
