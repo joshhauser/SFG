@@ -47,7 +47,7 @@ int getInput()
 }
 
 //message d'acceuil
-void screenfetch()
+void screenFetch()
 {
     char* welcomestr = "\n |￣￣￣￣￣￣￣￣|\n |  BIENVENUE     |\n | SUR MYSHELL    | \n |＿＿＿＿＿＿＿＿| \n(\\__/) ||\n(•ㅅ•) || \n/ 　 づ \n (saisir help afin de consulter le manuel) \n";
     printf("%s",welcomestr);
@@ -58,14 +58,14 @@ void help()
     char* manstr = "\n |￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣|\n |  MAN:                                                      |\n |     mkdir <nomrepertoire> : creer un repertoire            |\n |     rmdir <nomrepertoire> : supprimer un repertoire        |\n |     touch <nomfichier> : creer un fichier                  |\n |     cd <nomrepertoire> : changer le rep courant            |\n |     ls : liste des fichers                                 |\n |     lsall : liste tous les fichiers + date + droits        |\n |     lsR <fichier> : consulter les droits d'un fichier      |\n |     chmod <fichier> (+/-)droit (droit = r/w/rw)            |\n |     mv source destination : déplacer un fichier/repertoire |\n |     rm <nomfichier> : supprimer un fichier                 |\n |     cp <source> <destination> : copier un fichier          |\n |     echo texte > fichier : ecrire d:ans un fichier         |\n |     cat <fichier> : afficher le contenu d'un fichier       |\n |     df: consulter l'etat du disque                         |\n |     exit                                                   |\n |＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿| \n(\\__/) ||\n(•ㅅ•) || \n/ 　 づ \n ";
     printf("%s",manstr);
 }
-void exitscreen()
+void exitScreen()
 {
 	printf("A bientot ! \n");
 	printf("  _   _\n \\_/-\\_/\n  )   (\n (     )\n  )   (\n /     \\ \n(   9   ) A BIENTOT !!\n(_\\_____/_)`by Josh,Sarra,Imane,Amine,Miriam\n"); 
 
 }
 
-void launch_shell(int argc, char* argv[])
+void launchShell(int argc, char* argv[])
 {
 	int exitflag = 0;
 	int i ;
@@ -88,14 +88,14 @@ void launch_shell(int argc, char* argv[])
     
 	int funcArgCount = 0;
 	
-	screenfetch();
+	screenFetch();
     while(exitflag==0)
     {
         printf("%s",prompt); 
         funcArgCount = getInput();
         if(strcmp(argval[0],"exit")==0 || strcmp(argval[0],"z")==0)
         {
-			exitscreen();
+			exitScreen();
             //printf("exit \n");
             break;
         }
@@ -143,7 +143,7 @@ void launch_shell(int argc, char* argv[])
         }
         else if(strcmp(argval[0],"lsall")==0)
         {
-            mylsall();
+            mylsAll();
         }
 	    else if(strcmp(argval[0],"lsR")==0)
         {

@@ -3,16 +3,20 @@
 #include <unistd.h>
 #include <string.h>
 #include <math.h>
-#include <time.h> 
+#include <time.h>
 
 #include "../headers/sgf.h"
 #include "../headers/functions.h"
 
+// The disk
 disk_t disk;
+// The inode of the current folder ("/home/" by default)
 inode_t currentFolderInode;
+// The disk's file
 FILE *diskFile = NULL;
-char *currentFolder = MAIN_FOLDER;
+// Number of available blocs
 int availableBlocks = BLOCKS_COUNT;
+// Number of available inodes
 int availableInodes = INODES_COUNT;
 
 // Inits the disk structure
@@ -28,6 +32,7 @@ void initDisk()
     index = fseek(diskFile, 0, SEEK_END);
     if (index == 0)
       fileSize = ftell(diskFile);
+
     if (fileSize == -1)
     {
       fclose(diskFile);
@@ -42,6 +47,7 @@ void initDisk()
   diskFile = fopen("disk0", "rb");
   // Puts the file's index at the beginning
   fseek(diskFile, 0, SEEK_SET);
+
   // Gets inodes
   for (i = 0; i < INODES_COUNT; i++)
   {
@@ -50,6 +56,7 @@ void initDisk()
     if (strcmp(disk.inodes[i].fileName, "") != 0)
       availableInodes--;
   }
+
   // Gets blocks
   for (i = 0; i < BLOCKS_COUNT; i++)
   {
@@ -101,6 +108,7 @@ void initDiskContent()
 
   for (i = 0; i < BLOCKS_COUNT; i++)
     inode.usedBlocks[i] = -1;
+
   for (i = 1; i < INODES_COUNT; i++)
   {
     inode.id = i;
@@ -130,11 +138,10 @@ inode_t createFile(char *name, char fileType)
 {
   inode_t newFileInode;
   int i, j;
-  // Current folder content
   char *currentFolderContent;
   // Used blocks count for current inode
   int usedBlocksCount = 0;
-  // New folder
+  // String for new file
   char *newFile;
   // String for available inode id
   char availableInodeID[4];
@@ -205,8 +212,8 @@ inode_t createFile(char *name, char fileType)
       strcat(disk.blocks[lastBlock], newFile);
 
       // Sets blocks of the new inode to -1
-      for (i = 0; i < BLOCKS_COUNT; newFileInode.usedBlocks[i++] = -1)
-        ;
+      for (i = 0; i < BLOCKS_COUNT; newFileInode.usedBlocks[i++] = -1);
+
       newFileInode.rights[0] = fileType;
       strcpy(&newFileInode.rights[1], "rw");
       strcpy(newFileInode.fileName, name);
@@ -232,8 +239,8 @@ getNewBlock:
       usedBlocksCount++;
       strcpy(disk.blocks[i], newFile);
 
-      for (j = 0; j < BLOCKS_COUNT; newFileInode.usedBlocks[j++] = -1)
-        ;
+      for (j = 0; j < BLOCKS_COUNT; newFileInode.usedBlocks[j++] = -1);
+
       newFileInode.rights[0] = fileType;
       strcpy(&newFileInode.rights[1], "rw");
       strcpy(newFileInode.fileName, name);
@@ -302,8 +309,10 @@ void saveDisk()
   int i;
 
   diskFile = fopen("disk0", "wb");
+
   for (i = 0; i < INODES_COUNT; i++)
     fwrite(&disk.inodes[i], sizeof(inode_t), 1, diskFile);
+
   for (i = 0; i < BLOCKS_COUNT; i++)
     fwrite(&disk.blocks[i], sizeof(block_t), 1, diskFile);
   fclose(diskFile);
@@ -312,7 +321,7 @@ void saveDisk()
 /**
  * Check if a file exists in the current folder
  * @param fileName the name of the file to look for
- * @param fileType the type of the file (ordinary or directory)
+ * @param fileType the type of the file
  * @param folderContent the string which contains the pair <inode:file name>
  * for all files of the current folder
  * @return the inode id of the file if it exists, otherwise -1
@@ -329,7 +338,7 @@ int fileExists(char *fileName, char fileType, char *folderContent)
     char **folderItems = splitStr(folderContent, FOLDER_DELIMITER, &folderItemsCount);
     for (i = 0; i < folderItemsCount; i++)
     {
-      char *currentItem = (char*) malloc(strlen(folderItems[i]) * sizeof(char));
+      char *currentItem = (char *)malloc(strlen(folderItems[i]) * sizeof(char));
       sscanf(folderItems[i], "%*c%*d:%s", currentItem);
       currentItem[strlen(currentItem) - 1] = '\0';
 
@@ -380,7 +389,7 @@ void removeFolder(char *folderName)
   // Items of the folder to delete
   char **folderItems = splitStr(disk.blocks[folderInode.usedBlocks[0]], FOLDER_DELIMITER, &folderItemsCount);
 
-  // Check if the folder is empty: if it is, the only item should be the link to the parent directory
+  // Checks if the folder is empty: if it is, the only item should be the link to the parent directory
   if (folderItemsCount > 1)
   {
     nstdError("Le répertoire \"%s\" n'est pas vide\n", folderName);
@@ -492,161 +501,164 @@ void rewriteFolderContent(inode_t *folderInode, char *folderContent)
   }
 }
 
+// Displays current folder's content
 void myls()
 {
-   char *currentFolderContent = getFileContent(currentFolderInode);     
-  //manips pour afficher seulement le nom du fichier
-  //int init_size = strlen(currentFolderContent);
+  char *currentFolderContent = getFileContent(currentFolderInode);
   char delim[] = "||";
   char *ptr = strtok(currentFolderContent, delim);
-  int id=0;
+  int id = 0;
   inode_t inod;
- 
+
   while (ptr != NULL)
   {
-    id = ptr[1]-'0';  //converts char id into int
-    inod=getInodeByID(id);
-    if ( inod.rights[0] == 'd')
+    id = ptr[1] - '0'; // Converts char id into int
+    inod = getInodeByID(id);
+    if (inod.rights[0] == 'd')
     {
-		printf("[d]");
-	}
-	else
+      printf("[d]");
+    }
+    else
     {
       printf("[f]");
     }
-    clean_file_name(ptr);
-    remove_string(ptr,":");
+    cleanFileName(ptr);
+    remove_string(ptr, ":");
     printf("%s", ptr);
     printf("    ");
-	ptr = strtok(NULL, delim);
- }
- printf("\n");
-}
-//affiche les fichiers du dossier courant avec la date et les droits
-
-void lsdatesRights(){
-	int i = 0 ;
-	inode_t inod;
-	char delim[] = "||";
-	//on affiche maintenant le contenu de chaque repertoire:
-	int id = 0;
-	//on recupere le contenu du repertoire courant 
-	char *currentFolderContent = getFileContent(currentFolderInode);
-	int x;
-	char *ptr1 = strtok(currentFolderContent, delim);
-	while (ptr1 != NULL)
-	{
-		//affichage du nom des fichiers 
-		//si c un repertoire pére:
-		if ( ptr1[i] == '<' && (ptr1[i+1] >= '0' || ptr1[i+1] <= '9' ) && ptr1[i+2]==':' && ptr1[i+3]=='.' && ptr1[i+4]=='.' && ptr1[i+5]=='>' )
-		{
-			ptr1 = strtok(NULL, delim);
-		}
-		else{
-		//remove_string(ptr1,":");
-		id = ptr1[1]-'0';  //converts char id into int
-		inod=getInodeByID(id);
-		for (i=0;i<3;i++)
-		{
-			printf("%c",inod.rights[i]);
-		}
-		printf("      ");
-		//affichage de la date
-		for(i=0;i<3;i++)
-		{
-			if(i<2)
-			{
-				if(i==1)
-				{
-					x=inod.lastModificationDate[i];
-					if (x<=9 || x >=1) //on ajoute un 0 car le mois est de type int 
-					{
-						printf("0%d/", x);
-					}
-					else
-					{
-						printf("%d/", x);
-					}	
-				}
-				else
-				{
-					printf("%d/", inod.lastModificationDate[i]);
-				}
-			}
-			else //on enleve le / a la fin 
-			{
-				printf("%d    ", inod.lastModificationDate[i]);
-			}
-		}
-		printf("     ");
-		clean_file_name(ptr1);
-		printf("%s \n", ptr1);		
-		ptr1 = strtok(NULL, delim);
-		}
-	}
+    ptr = strtok(NULL, delim);
+  }
+  printf("\n");
 }
 
-void mylsall()
+
+// Displays current folder's content with the rights for each item
+void lsDateRights()
 {
-	int i,j;
-	char * chaine = (char*) malloc(sizeof(char)*600); //contient le contenu de tous les blocs 
-	strcpy(chaine, "");
-	char** folders = NULL ; //contient tout les repertoires
-	folders = malloc(20 * sizeof(char*)); //Supposons qu'il y a 20 repertoires
-    for (i=0;i<10;i++)
+  int i = 0;
+  inode_t inod;
+  char delim[] = "||";
+  int id = 0;
+  // Gets content of the current directory
+  char *currentFolderContent = getFileContent(currentFolderInode);
+  int x;
+  char *ptr1 = strtok(currentFolderContent, delim);
+  while (ptr1 != NULL)
+  {
+    // Displays file name
+    if (ptr1[i] == '<' && (ptr1[i + 1] >= '0' || ptr1[i + 1] <= '9') && ptr1[i + 2] == ':' && ptr1[i + 3] == '.' && ptr1[i + 4] == '.' && ptr1[i + 5] == '>')
     {
-		folders[i]= malloc(30*sizeof(char));
-		folders[i]="";
+      ptr1 = strtok(NULL, delim);
     }
-    
-	int nbf; //number of folders
-	inode_t inodact;
-	inodact = currentFolderInode;
-	//on parcourt le disque
-	for (i = 0; i < INODES_COUNT; i++)
-	{
-		for (j = 0; j < BLOCKS_COUNT; j++)
-		{
-		  if (disk.inodes[i].usedBlocks[j] != -1)
-		  {
-			if (strcmp(disk.blocks[disk.inodes[i].usedBlocks[j]], "") != 0)
-			{
-			    strcat(chaine,disk.blocks[disk.inodes[i].usedBlocks[j]]);
-			}
-		  }
-		}
-	}
-	i=0;
-	
-	//on selectionne seulement les repertoires et on les stoque dans un tableau  
-	char delim[] = "||";
-    char * ptr = strtok(chaine, delim); 
-    inode_t inod;
-    int id = 0;
-	while (ptr != NULL)
+    else
     {
-		id = ptr[1]-'0';  //converts char id into int
-		inod=getInodeByID(id);
-		if ( inod.rights[0] == 'd')
-		{
-			folders[i] = ptr;
-			i++;
-		}
-	  
-		ptr = strtok(NULL, delim);
+      id = ptr1[1] - '0'; // Converts char id into int
+      inod = getInodeByID(id);
+      for (i = 0; i < 3; i++)
+      {
+        printf("%c", inod.rights[i]);
+      }
+      printf("      ");
+      
+      // Displays last modification date
+      for (i = 0; i < 3; i++)
+      {
+        if (i < 2)
+        {
+          if (i == 1)
+          {
+            x = inod.lastModificationDate[i];
+            if (x <= 9 || x >= 1)
+            {
+              printf("0%d/", x);
+            }
+            else
+            {
+              printf("%d/", x);
+            }
+          }
+          else
+          {
+            printf("%d/", inod.lastModificationDate[i]);
+          }
+        }
+        else // Removes last '/'
+        {
+          printf("%d    ", inod.lastModificationDate[i]);
+        }
+      }
+      printf("     ");
+      cleanFileName(ptr1);
+      printf("%s \n", ptr1);
+      ptr1 = strtok(NULL, delim);
     }
-	nbf = i;
-	//on affiche maintenant le contenu de chaque repertoire:
-	currentFolderInode = disk.inodes[0];
-	lsdatesRights();
-	for(i=0;i<nbf;i++)
-	{
-		id = folders[i][1]-'0';
-		currentFolderInode = getInodeByID(id);
-		lsdatesRights();		
-	} 
-	currentFolderInode = inodact;
+  }
 }
+
+void mylsAll()
+{
+  int i, j;
+  char *chaine = (char *) malloc(sizeof(char) * 600); //contient le contenu de tous les blocs
+  strcpy(chaine, "");
+  char **folders = NULL;                 //contient tout les repertoires
+  folders = malloc(20 * sizeof(char *)); //Supposons qu'il y a 20 repertoires
+  for (i = 0; i < 10; i++)
+  {
+    folders[i] = malloc(30 * sizeof(char));
+    folders[i] = "";
+  }
+
+  int foldersCount;
+  inode_t inodact;
+  inodact = currentFolderInode;
+  //on parcourt le disque
+  for (i = 0; i < INODES_COUNT; i++)
+  {
+    for (j = 0; j < BLOCKS_COUNT; j++)
+    {
+      if (disk.inodes[i].usedBlocks[j] != -1)
+      {
+        if (strcmp(disk.blocks[disk.inodes[i].usedBlocks[j]], "") != 0)
+        {
+          strcat(chaine, disk.blocks[disk.inodes[i].usedBlocks[j]]);
+        }
+      }
+    }
+  }
+  i = 0;
+
+  //on selectionne seulement les repertoires et on les stoque dans un tableau
+  char delim[] = "||";
+  char *ptr = strtok(chaine, delim);
+  inode_t inod;
+  int id = 0;
+  while (ptr != NULL)
+  {
+    id = ptr[1] - '0'; //converts char id into int
+    inod = getInodeByID(id);
+    if (inod.rights[0] == 'd')
+    {
+      folders[i] = ptr;
+      i++;
+    }
+
+    ptr = strtok(NULL, delim);
+  }
+  foldersCount = i;
+  //on affiche maintenant le contenu de chaque repertoire:
+  currentFolderInode = disk.inodes[0];
+  lsDateRights();
+  for (i = 0; i < foldersCount; i++)
+  {
+    id = folders[i][1] - '0';
+    currentFolderInode = getInodeByID(id);
+    lsDateRights();
+  }
+  currentFolderInode = inodact;
+}
+
+
+
 /**
  * Opens a file
  * @param fileName the name of the file to open
@@ -713,7 +725,6 @@ void writeFile(file_t file, char *buffer, int bufferSize)
   for (i = 0; i < BLOCKS_COUNT; i++)
     remainingSpace += getRemainingSpace(disk.blocks[i]);
 
-
   if (remainingSpace < bufferSize)
   {
     nstdError("Il n'y a plus de place sur le disque.\n");
@@ -773,7 +784,7 @@ void writeFile(file_t file, char *buffer, int bufferSize)
         {
           for (i = 0; i < lbRemainingSpace; i++)
             lastBlockContent[BLOCK_SIZE - lbRemainingSpace + i] = buffer[i];
-    
+
           bufferPos = i;
           strcpy(disk.blocks[fileInode.usedBlocks[usedBlocksCount - 1]], lastBlockContent);
         }
@@ -869,7 +880,7 @@ void readFile(file_t file, char **buffer, int bufferSize)
   strcpy(fileContent, "");
   for (i = 0; i < usedBlocksCount; i++)
   {
-    fileContent = (char*) realloc(fileContent, ((i + 1) * BLOCK_SIZE) * sizeof(char));
+    fileContent = (char *)realloc(fileContent, ((i + 1) * BLOCK_SIZE) * sizeof(char));
     strcat(fileContent, disk.blocks[fileInode.usedBlocks[i]]);
   }
 
@@ -885,7 +896,6 @@ void readFile(file_t file, char **buffer, int bufferSize)
       (*buffer)[i] = fileContent[i];
     }
   }
- 
 }
 
 /**
@@ -1017,18 +1027,18 @@ void move(char *source, char *destination)
           strcat(currentFolderContent, FOLDER_DELIMITER);
         if (curItemInodeID != sourceInode.id)
         {
-          currentFolderContent = (char*) realloc(currentFolderContent, (strlen(currentFolderContent) + strlen(FOLDER_DELIMITER) + strlen(currentFolderItems[i])) * sizeof(char));
+          currentFolderContent = (char *)realloc(currentFolderContent, (strlen(currentFolderContent) + strlen(FOLDER_DELIMITER) + strlen(currentFolderItems[i])) * sizeof(char));
           strcat(currentFolderContent, currentFolderItems[i]);
         }
         else
         {
-          currentFolderContent = (char*) realloc(currentFolderContent, (strlen(currentFolderContent) + strlen(FOLDER_DELIMITER) + strlen(fileToMove)) * sizeof(char));
+          currentFolderContent = (char *)realloc(currentFolderContent, (strlen(currentFolderContent) + strlen(FOLDER_DELIMITER) + strlen(fileToMove)) * sizeof(char));
           strcat(currentFolderContent, fileToMove);
         }
         j++;
       }
 
-      currentFolderContent = (char* )realloc(currentFolderContent, strlen(currentFolderContent) + 1 * sizeof(char));
+      currentFolderContent = (char *)realloc(currentFolderContent, strlen(currentFolderContent) + 1 * sizeof(char));
       currentFolderContent[strlen(currentFolderContent)] = '\0';
 
       rewriteFolderContent(&currentFolderInode, currentFolderContent);
@@ -1067,7 +1077,6 @@ void move(char *source, char *destination)
   currentFolderContent = (char *)malloc(sizeof(char));
   strcpy(currentFolderContent, "");
 
-
   /*** Rewrites the current folder's content without the moved file ***/
   j = 0;
   for (i = 0; i < curFolderItemsCount; i++)
@@ -1078,17 +1087,17 @@ void move(char *source, char *destination)
     {
       if (i > 0 && j > 0)
         strcat(currentFolderContent, FOLDER_DELIMITER);
-      currentFolderContent = (char*) realloc(currentFolderContent, (strlen(currentFolderContent) + strlen(FOLDER_DELIMITER) + strlen(currentFolderItems[i])) * sizeof(char));
+      currentFolderContent = (char *)realloc(currentFolderContent, (strlen(currentFolderContent) + strlen(FOLDER_DELIMITER) + strlen(currentFolderItems[i])) * sizeof(char));
       strcat(currentFolderContent, currentFolderItems[i]);
       j++;
     }
   }
 
-  currentFolderContent = (char*) realloc(currentFolderContent, strlen(currentFolderContent) + 1 * sizeof(char));
+  currentFolderContent = (char *)realloc(currentFolderContent, strlen(currentFolderContent) + 1 * sizeof(char));
   currentFolderContent[strlen(currentFolderContent)] = '\0';
 
   rewriteFolderContent(&currentFolderInode, currentFolderContent);
-  
+
   // Updates last modification date for the current folder inode
   time_t cTime = time(NULL);
   struct tm currentTime = *localtime(&cTime);
@@ -1096,9 +1105,9 @@ void move(char *source, char *destination)
   currentFolderInode.lastModificationDate[1] = currentTime.tm_mon + 1;
   currentFolderInode.lastModificationDate[2] = currentTime.tm_year + 1900;
 
-  
   // Checks if the source is a directory
-  if (sourceInode.rights[0] == 'd') {
+  if (sourceInode.rights[0] == 'd')
+  {
     /*** Resets the link between the moved folder and its parent folder ***/
 
     char strValueOfSrcParentID[4];
@@ -1124,7 +1133,7 @@ void move(char *source, char *destination)
     // Re-adds other items
     for (i = 1; i < sourceItemsCount; i++)
     {
-      sourceContent = (char*) realloc(sourceContent, (strlen(sourceContent) + strlen(FOLDER_DELIMITER) + strlen(sourceItems[i]) + 1) * sizeof(char));
+      sourceContent = (char *)realloc(sourceContent, (strlen(sourceContent) + strlen(FOLDER_DELIMITER) + strlen(sourceItems[i]) + 1) * sizeof(char));
       strcat(sourceContent, sourceItems[i]);
       if (i < (sourceItemsCount - 1))
         strcat(sourceContent, FOLDER_DELIMITER);
@@ -1134,7 +1143,7 @@ void move(char *source, char *destination)
   }
 
   /*** Update destination content ***/
-  destinationContent = (char*) realloc(destinationContent, (strlen(FOLDER_DELIMITER) + strlen(destinationContent) + strlen(fileToMove) + 1) * sizeof(char));
+  destinationContent = (char *)realloc(destinationContent, (strlen(FOLDER_DELIMITER) + strlen(destinationContent) + strlen(fileToMove) + 1) * sizeof(char));
   strcat(destinationContent, FOLDER_DELIMITER);
   strcat(destinationContent, fileToMove);
 
@@ -1270,7 +1279,6 @@ void copyFile(inode_t fileInode, char *content)
 
   // Creates the copy of fileInode
   inode_t fileCopy = createFile(fileInode.fileName, fileInode.rights[0]);
-
 
   if (fileCopy.rights[0] == 'd')
   {
@@ -1582,7 +1590,8 @@ void unlinkFile(char *link)
   linkInode.lastModificationDate[1] = currentTime.tm_mon + 1;
   linkInode.lastModificationDate[2] = currentTime.tm_year + 1900;
 
-  for (i = 0; i < BLOCKS_COUNT; linkInode.usedBlocks[i++] = -1);
+  for (i = 0; i < BLOCKS_COUNT; linkInode.usedBlocks[i++] = -1)
+    ;
 
   for (i = 0; i < INODES_COUNT; i++)
   {
@@ -1618,22 +1627,22 @@ void unlinkFile(char *link)
 
   saveDisk();
 }
-void cat(char* fileName)
+void cat(char *fileName)
 {
-	file_t file; 
-	int i = 0 ;
-	int size = getFileSize(fileName);
-	char* buffer = NULL;
-    file = openFile(fileName,R);
-    readFile(file,&buffer,size);
-    for(i=0;i<size-3;i++)
-    {
-		printf("%c",buffer[i]);
-	}
-    //closeFile(file);
-    printf("\n");
-    closeFile(file);
-   // printf("taille: %d",size);
+  file_t file;
+  int i = 0;
+  int size = getFileSize(fileName);
+  char *buffer = NULL;
+  file = openFile(fileName, R);
+  readFile(file, &buffer, size);
+  for (i = 0; i < size - 3; i++)
+  {
+    printf("%c", buffer[i]);
+  }
+  //closeFile(file);
+  printf("\n");
+  closeFile(file);
+  // printf("taille: %d",size);
 }
 
 /**
@@ -1648,8 +1657,8 @@ inode_t getFileFromLink(inode_t linkInode)
   strcpy(fileInode.fileName, "");
   strcpy(fileInode.rights, "");
 
-
-  for (i = 0; i < BLOCKS_COUNT; fileInode.usedBlocks[i++] = -1);
+  for (i = 0; i < BLOCKS_COUNT; fileInode.usedBlocks[i++] = -1)
+    ;
 
   for (i = 0; i < INODES_COUNT; i++)
   {
@@ -1663,23 +1672,26 @@ inode_t getFileFromLink(inode_t linkInode)
   return fileInode;
 }
 
-int getFileSize(char *fileName) {
+int getFileSize(char *fileName)
+{
   int fileInodeID;
   inode_t fileInode;
   int i = 0;
   int fileSize = 0;
   char *currentFolderContent = getFileContent(currentFolderInode);
-  
+
   fileInodeID = fileExists(fileName, '-', currentFolderContent);
 
-  if (fileInodeID == -1) {
+  if (fileInodeID == -1)
+  {
     nstdError("Le fichier \"%s\" n'existe pas.\n", fileName);
     return -1;
   }
 
   fileInode = getInodeByID(fileInodeID);
 
-  while (fileInode.usedBlocks[i] != -1) {
+  while (fileInode.usedBlocks[i] != -1)
+  {
     fileSize += strlen(disk.blocks[fileInode.usedBlocks[i]]);
     i++;
   }
@@ -1707,73 +1719,72 @@ void testContent()
   }
 }
 
-void echo(char* text,char* destination) //Commande pour écrire une chaine de caractère donnée en paramètre dans un fichier
+void echo(char *text, char *destination) //Commande pour écrire une chaine de caractère donnée en paramètre dans un fichier
 {
-	file_t file;
-	char* str;
-	str = text;
-    file = openFile(destination,W);
-    writeFile(file,str,strlen(str));
-    closeFile(file);
+  file_t file;
+  char *str;
+  str = text;
+  file = openFile(destination, W);
+  writeFile(file, str, strlen(str));
+  closeFile(file);
 }
 
-void lsRights(char* fileName)
+void lsRights(char *fileName)
 {
-	char *currentFolderContent = getFileContent(currentFolderInode); 
-	int id = 0;	
-	inode_t inod;
-	int i = 0;
-	//on retrouve l'inode du fichier 
-	id = fileExists(fileName,'-',currentFolderContent);
-	if ( id != -1 )
-	{
-		inod = getInodeByID(id);
-		printf("%s : ",fileName);
-		for(i=0;i<3;i++)
-		{
-			printf("%c ", inod.rights[i]);
-		}
-		printf("\n");		
-	}
+  char *currentFolderContent = getFileContent(currentFolderInode);
+  int id = 0;
+  inode_t inod;
+  int i = 0;
+  //on retrouve l'inode du fichier
+  id = fileExists(fileName, '-', currentFolderContent);
+  if (id != -1)
+  {
+    inod = getInodeByID(id);
+    printf("%s : ", fileName);
+    for (i = 0; i < 3; i++)
+    {
+      printf("%c ", inod.rights[i]);
+    }
+    printf("\n");
+  }
 }
 
-
-void chmod(char* fileName, char* rights)
+void chmod(char *fileName, char *rights)
 {
-	char *currentFolderContent = getFileContent(currentFolderInode);
-	int id = 0;	
-	//on retrouve l'inode du fichier 
-	id = fileExists(fileName,'-',currentFolderContent);
-	//on se place dans l'inode afin de la modifier
-	if ( id != -1)
-	{
-		if(strcmp(rights,"+r")==0)
-		{
-			disk.inodes[id].rights[1] = 'r'; 
-		}
-		else if(strcmp(rights,"-r")==0)
-		{
-			disk.inodes[id].rights[1] = '-'; 
-		}
-		else if(strcmp(rights,"+w")==0)
-		{
-			disk.inodes[id].rights[2] = 'w'; 
-		}
-		else if(strcmp(rights,"-w")==0)
-		{
-			disk.inodes[id].rights[2] = '-'; 
-		}
-		else if(strcmp(rights,"+rw")==0)
-		{
-			disk.inodes[id].rights[1] = '-'; 
-			disk.inodes[id].rights[2] = '-'; 
-		}
-		else if(strcmp(rights,"-rw")==0)
-		{
-			disk.inodes[id].rights[1] = '-';
-			disk.inodes[id].rights[2] = '-'; 
-		}
-	}
+  char *currentFolderContent = getFileContent(currentFolderInode);
+  int id = 0;
+  //on retrouve l'inode du fichier
+  id = fileExists(fileName, '-', currentFolderContent);
+  //on se place dans l'inode afin de la modifier
+  if (id != -1)
+  {
+    if (strcmp(rights, "+r") == 0)
+    {
+      disk.inodes[id].rights[1] = 'r';
+    }
+    else if (strcmp(rights, "-r") == 0)
+    {
+      disk.inodes[id].rights[1] = '-';
+    }
+    else if (strcmp(rights, "+w") == 0)
+    {
+      disk.inodes[id].rights[2] = 'w';
+    }
+    else if (strcmp(rights, "-w") == 0)
+    {
+      disk.inodes[id].rights[2] = '-';
+    }
+    else if (strcmp(rights, "+rw") == 0)
+    {
+      disk.inodes[id].rights[1] = '-';
+      disk.inodes[id].rights[2] = '-';
+    }
+    else if (strcmp(rights, "-rw") == 0)
+    {
+      disk.inodes[id].rights[1] = '-';
+      disk.inodes[id].rights[2] = '-';
+    }
+  }
 
   saveDisk();
 }

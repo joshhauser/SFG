@@ -5,8 +5,9 @@
 #include "headers/sgf.h"
 #include "headers/functions.h"
 
-int main(int argc, char* argv[]){
-  initDisk(); 
-  launch_shell(argc,argv);
+int main(int argc, char *argv[])
+{
+  initDisk();
+  launchShell(argc, argv);
   return 0;
 }
