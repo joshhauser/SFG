@@ -1,6 +1,6 @@
-#include "../headers/sgf.h"
 #ifndef SHELL_H
 #define SHELL_H
+
 #define MAX_READABLE 1000
 #define BUFSIZE 1000
 #define INPBUF 100

@@ -147,9 +147,9 @@ inode_t createFile(char *name, char fileType)
   char availableInodeID[4];
 
   // Checks file name length
-  if (strlen(name) > 50)
+  if (strlen(name) > MAX_FILENAME_CHARS)
   {
-    nstdError("Veuillez choisir un nom de moins de 100 caractères.\n");
+    nstdError("Veuillez choisir un nom de moins de 100 caractères.");
     return newFileInode;
   }
 
@@ -164,7 +164,7 @@ inode_t createFile(char *name, char fileType)
   // Checks if there are available inodes & blocks
   if (availableInodes == 0 || availableBlocks == 0)
   {
-    nstdError("Veuillez supprimer des fichiers pour libérer de l'espace de stockage\n");
+    nstdError("Veuillez supprimer des fichiers pour libérer de l'espace de stockage");
     return newFileInode;
   }
 
@@ -197,7 +197,7 @@ inode_t createFile(char *name, char fileType)
     // Check if file with same name and same type exists
     if (fileExists(name, '-', currentFolderContent) != -1 || fileExists(name, 'd', currentFolderContent) != -1 || fileExists(name, 'l', currentFolderContent) != -1)
     {
-      nstdError("Le fichier \"%s\" existe déjà.\n", name);
+      nstdError("Le fichier \"%s\" existe déjà.", name);
       return newFileInode;
     }
 
@@ -378,7 +378,7 @@ void removeFolder(char *folderName)
 
   if (folderInodeID == -1)
   {
-    nstdError("Le répertoire \"%s\" n'existe pas.\n", folderName);
+    nstdError("Le répertoire \"%s\" n'existe pas.", folderName);
     return;
   }
 
@@ -391,7 +391,7 @@ void removeFolder(char *folderName)
   // Checks if the folder is empty: if it is, the only item should be the link to the parent directory
   if (folderItemsCount > 1)
   {
-    nstdError("Le répertoire \"%s\" n'est pas vide\n", folderName);
+    nstdError("Le répertoire \"%s\" n'est pas vide.", folderName);
     return;
   }
 
@@ -708,7 +708,7 @@ void writeFile(file_t file, char *buffer, int bufferSize)
 
   if (remainingSpace < bufferSize)
   {
-    nstdError("Il n'y a plus de place sur le disque.\n");
+    nstdError("Il n'y a plus de place sur le disque.");
     return;
   }
 
@@ -772,7 +772,7 @@ void writeFile(file_t file, char *buffer, int bufferSize)
       }
       else
       {
-        nstdError("Il n'y a pas assez de place sur le disque.\n");
+        nstdError("Il n'y a pas assez de place sur le disque.");
         return;
       }
     }
@@ -894,7 +894,7 @@ void move(char *source, char *destination)
   // Checks paths
   if (countOcc(source, '/') > 1 || countOcc(destination, '/') > 1)
   {
-    nstdError("Erreur lors de la copie.\n");
+    nstdError("Erreur lors de la copie.");
     return;
   }
 
@@ -913,7 +913,7 @@ void move(char *source, char *destination)
   // Checks if the source file exists
   if ((sourceInodeID = fileExists(source, '-', currentFolderContent)) == -1 && (sourceInodeID = fileExists(source, 'd', currentFolderContent)) == -1 && (sourceInodeID = fileExists(source, 'l', currentFolderContent)) == -1)
   {
-    nstdError("La cible \"%s\" n'existe pas.\n", source);
+    nstdError("La cible \"%s\" n'existe pas.", source);
     return;
   }
 
@@ -924,7 +924,7 @@ void move(char *source, char *destination)
   {
     if ((destinationInodeID = fileExists(destination, '-', currentFolderContent)) != -1)
     {
-      nstdError("Impossible de déplacer un répertoire dans un fichier.\n");
+      nstdError("Impossible de déplacer un répertoire dans un fichier.");
       return;
     }
     else if ((destinationInodeID = fileExists(destination, 'd', currentFolderContent)) != -1)
@@ -1031,7 +1031,7 @@ void move(char *source, char *destination)
   // Checks if the source file already exists in the destination folder
   if (fileExists(source, 'd', destinationContent) != -1 || fileExists(source, '-', destinationContent) != -1 || fileExists(source, 'l', destinationContent) != -1)
   {
-    nstdError("La cible contient déjà ce fichier.\n");
+    nstdError("La cible contient déjà ce fichier.");
     return;
   }
 
@@ -1162,7 +1162,7 @@ void copy(char *source, char *destination)
   // Checks paths
   if (countOcc(source, '/') > 1 || countOcc(destination, '/') > 1)
   {
-    nstdError("Erreur lors de la copie.\n");
+    nstdError("Erreur lors de la copie.");
     return;
   }
 
@@ -1181,7 +1181,7 @@ void copy(char *source, char *destination)
   // Checks if the source file exists
   if ((sourceInodeID = fileExists(source, '-', currentFolderContent)) == -1 && (sourceInodeID = fileExists(source, 'd', currentFolderContent)) == -1 && (sourceInodeID = fileExists(source, 'l', currentFolderContent)) == -1)
   {
-    nstdError("Le fichier \"%s\" n'existe pas.\n", source);
+    nstdError("Le fichier \"%s\" n'existe pas.", source);
     return;
   }
 
@@ -1217,7 +1217,7 @@ void copy(char *source, char *destination)
     }
     else
     {
-      nstdError("Impossible de copier le dossier et son contenu. Il n' a plus de place sur le disque.\n");
+      nstdError("Impossible de copier le dossier et son contenu. Il n' a plus de place sur le disque.");
       return;
     }
   }
@@ -1225,7 +1225,7 @@ void copy(char *source, char *destination)
   {
     if (sourceInode.rights[0] == '-')
     {
-      nstdError("Impossible de copier un répertoire dans un fichier.\n");
+      nstdError("Impossible de copier un répertoire dans un fichier.");
       return;
     }
 
@@ -1300,7 +1300,7 @@ int changeDirectory(char *newDir)
 
   if (newDirInodeID == -1)
   {
-    nstdError("Le répertoire \"%s\" n'existe pas.\n", newDir);
+    nstdError("Le répertoire \"%s\" n'existe pas.", newDir);
     return -1;
   }
 
@@ -1399,7 +1399,7 @@ void removeFile(char *fileName)
   int fileInodeID = fileExists(fileName, '-', currentFolderContent);
   if (fileInodeID == -1)
   {
-    nstdError("Le fichier \"%s\" n'existe pas.\n", fileName);
+    nstdError("Le fichier \"%s\" n'existe pas.", fileName);
     return;
   }
 
@@ -1519,7 +1519,7 @@ int linkFile(char *file1, char *file2)
 
   if ((file1InodeID = fileExists(file1, 'd', currentFolderContent)) == -1 && (file1InodeID = fileExists(file1, '-', currentFolderContent)) == -1)
   {
-    nstdError("Le fichier \"%s\" n'existe pas.\n", file1);
+    nstdError("Le fichier \"%s\" n'existe pas.", file1);
     return -1;
   }
 
@@ -1554,7 +1554,7 @@ void unlinkFile(char *link)
 
   if ((linkInodeID = fileExists(link, 'l', currentFolderContent)) == -1)
   {
-    nstdError("Le lien symbolique \"%s\" n'existe pas.\n");
+    nstdError("Le lien symbolique \"%s\" n'existe pas.");
     return;
   }
 
@@ -1618,7 +1618,7 @@ void cat(char *fileName)
   char *currentFolderContent = getFileContent(currentFolderInode);
 
   if ((fileInodeID = fileExists(fileName, '-', currentFolderContent)) == -1) {
-    nstdError("Le fichier \"%s\" n'existe pas.\n", fileName);
+    nstdError("Le fichier \"%s\" n'existe pas.", fileName);
     return;
   }
 
@@ -1682,7 +1682,7 @@ int getFileSize(char *fileName)
 
   if (fileInodeID == -1)
   {
-    nstdError("Le fichier \"%s\" n'existe pas.\n", fileName);
+    nstdError("Le fichier \"%s\" n'existe pas.", fileName);
     return -1;
   }
 

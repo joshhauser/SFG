@@ -7,6 +7,7 @@
 #define BLOCKS_COUNT 150
 #define MAIN_FOLDER "/home/"
 #define FOLDER_DELIMITER "||"
+#define MAX_FILENAME_CHARS 50
 
 // Enums ================
 typedef enum accessMode_e

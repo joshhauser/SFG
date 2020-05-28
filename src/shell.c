@@ -1,20 +1,23 @@
-#include "../headers/shell.h"
-#include "../headers/functions.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
 #include <string.h>
 
+
+#include "../headers/shell.h"
+#include "../headers/functions.h"
+#include "../headers/sgf.h"
+
 // Gets input containing spaces & tabs and store it in argval
 int getInput()
 {
 	int argcount = 0;
-	unsigned int buf = 0;
-	
+	size_t buf = 0;
+
 	fflush(stdout);
 	input = NULL;
 	getline(&input, &buf, stdin);
-	argcount = 0;
+
 	while ((argval[argcount] = strsep(&input, " \t\n")) != NULL && argcount < ARGMAX - 1)
 	{
 		if (strcmp(argval[argcount], "") != 0)
@@ -22,6 +25,7 @@ int getInput()
 			argcount++;
 		}
 	}
+
 	free(input);
 	return argcount;
 }
@@ -56,13 +60,16 @@ void launchShell()
 	char *prompt = malloc((100) * sizeof(char));
 
 	char **folder = NULL;
-	folder = malloc(10 * sizeof(char *)); //10 lignes
+	folder = malloc(10 * sizeof(char *)); // 10 folders
+
 	for (i = 0; i < 10; i++)
 	{
-		folder[i] = malloc(20 * sizeof(char));
+		folder[i] = malloc(MAX_FILENAME_CHARS * sizeof(char));
 		folder[i] = "";
 	}
+
 	folder[0] = MAIN_FOLDER;
+
 	strcpy(prompt, "");
 	strcat(prompt, "[ShellLite]:~$ ");
 	strcat(prompt, folder[0]);
@@ -78,7 +85,6 @@ void launchShell()
 		if (strcmp(argval[0], "exit") == 0 || strcmp(argval[0], "z") == 0)
 		{
 			exitScreen();
-			//printf("exit \n");
 			break;
 		}
 		else if (strcmp(argval[0], "help") == 0)
@@ -89,7 +95,7 @@ void launchShell()
 		{
 			if ((sizeof(argval[2]) == 0) || funcArgCount != 3)
 			{
-				printf("Erreur. saisir mv <source> <destination> ou consulter le manuel via help\n");
+				nstdError("Saisir mv <source> <destination> ou consulter le manuel via \"help\".");
 			}
 			else
 			{
@@ -98,22 +104,27 @@ void launchShell()
 		}
 		else if (strcmp(argval[0], "cd") == 0)
 		{
-			int var;
-			var = changeDirectory(argval[1]);
-			if (var != -1 && funcArgCount == 2)
-			{
-				if (strcmp(argval[1], "..") != 0)
+			if (funcArgCount == 1) {
+				nstdError("Saisir cd <répertoire> ou consulter le manuel via \"help\".");
+			}
+			else {
+				int var;
+				var = changeDirectory(argval[1]);
+				if (var != -1 && funcArgCount == 2)
 				{
-					folder[repcount] = argval[1];
-					strcat(prompt, folder[repcount]);
-					strcat(prompt, "/");
-					repcount++;
-				}
-				else
-				{
-					remove_string(prompt, folder[repcount - 1]);
-					remove_char(prompt, strlen(prompt) - 1);
-					repcount--;
+					if (strcmp(argval[1], "..") != 0)
+					{
+						folder[repcount] = argval[1];
+						strcat(prompt, folder[repcount]);
+						strcat(prompt, "/");
+						repcount++;
+					}
+					else
+					{
+						remove_string(prompt, folder[repcount - 1]);
+						remove_char(prompt, strlen(prompt) - 1);
+						repcount--;
+					}
 				}
 			}
 		}
@@ -131,13 +142,14 @@ void launchShell()
 		}
 		else if (strcmp(argval[0], "chmod") == 0)
 		{
-			chmod(argval[1], argval[2]);
+			if (funcArgCount == 3) chmod(argval[1], argval[2]);
+			else nstdError("Saisir chmod <fichier> <droits> ou consulter le manuel via \"help\".");
 		}
 		else if (strcmp(argval[0], "mkdir") == 0)
 		{
 			if (funcArgCount != 2)
 			{
-				printf("Erreur. Saisir mkdir <nom_repertoire> ou consulter help\n");
+				nstdError("Saisir mkdir <nom_repertoire> ou consulter le manuel via \"help\".");
 			}
 			else
 			{
@@ -148,7 +160,7 @@ void launchShell()
 		{
 			if (funcArgCount != 2)
 			{
-				printf("Erreur. Saisir rmdir <nom_repertoire> ou consulter help\n");
+				nstdError("Saisir rmdir <nom_repertoire> ou consulter le manuel via \"help\".");
 			}
 			else
 			{
@@ -159,7 +171,7 @@ void launchShell()
 		{
 			if (funcArgCount != 2)
 			{
-				printf("Erreur. Saisir touch <nom_fichier> ou consulter help\n");
+				nstdError("Saisir touch <nom_fichier> ou consulter le manuel via \"help\".");
 			}
 			else
 			{
@@ -170,7 +182,7 @@ void launchShell()
 		{
 			if (funcArgCount != 2)
 			{
-				printf("Erreur. Saisir rm <nom_fichier> ou consulter help\n");
+				nstdError("Saisir rm <nom_fichier> ou consulter le manuel via \"help\".");
 			}
 			else
 			{
@@ -179,15 +191,18 @@ void launchShell()
 		}
 		else if (strcmp(argval[0], "cp") == 0)
 		{
-			char *file1 = argval[1];
-			char *file2 = argval[2];
-			if (funcArgCount > 2 && strlen(file1) > 0 && strlen(file2) > 0)
-			{
-				copy(argval[1], argval[2]);
+			if (funcArgCount == 3) {
+				char *file1 = argval[1];
+				char *file2 = argval[2];
+
+				if (strlen(file1) > 0 && strlen(file2) > 0)
+				{
+					copy(argval[1], argval[2]);
+				}
 			}
 			else
 			{
-				printf("+--- Error in cp : parametres insuffisants \n");
+				nstdError("Saisir cp <source> <destination> ou consulter le manuel via \"help\".");
 			}
 		}
 		else if (strcmp(argval[0], "echo") == 0)
@@ -214,17 +229,22 @@ void launchShell()
 				}
 				else
 				{
-					printf("+---- Error: saisir echo texte > destination\n");
+					nstdError("Saisis echo <texte> > <destination> ou consulter le manuel via \"help\".");
 				}
 			}
 			else
 			{
-				printf("+---- Error: saisir echo texte > destination\n");
+				nstdError("Saisis echo <texte> > <destination> ou consulter le manuel via \"help\".");
 			}
 		}
 		else if (strcmp(argval[0], "cat") == 0)
 		{
-			cat(argval[1]);
+			if (funcArgCount == 2) {
+				cat(argval[1]);
+			}
+			else {
+				nstdError("Saisir cat <fichier> ou consulter le manuel via \"help\".");
+			}
 		}
 		else if (strcmp(argval[0], "df") == 0)
 		{
@@ -232,7 +252,7 @@ void launchShell()
 		}
 		else
 		{
-			printf("Commande inconnue. Saisir help afin de consulter le manuel \n");
+			nstdError("Commande inconnue. Saisir \"help\" afin de consulter le manuel.");
 		}
 	}
 }
