@@ -52,6 +52,7 @@ void testContent();
 void myls();
 void lsdatesRights();
 void mylsall();
+void cat(char* fileName);
 void closeFile(file_t file);
 void removeFile(char *fileName);
 void removeFolder(char * folderName);
@@ -71,7 +72,7 @@ int changeDirectory(char *newDir);
 int fileExists(char * fileName, char fileType, char * folderContent);
 int getRemainingSpace(char *content);
 int linkFile(char *file1, char *file2);
-int getFileSize(char *fileName)
+int getFileSize(char *fileName);
 
 char *getFileContent(inode_t folder);
 char *getFileNameByID(int inodeID);

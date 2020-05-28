@@ -885,6 +885,7 @@ void readFile(file_t file, char **buffer, int bufferSize)
       (*buffer)[i] = fileContent[i];
     }
   }
+ 
 }
 
 /**
@@ -1617,6 +1618,23 @@ void unlinkFile(char *link)
 
   saveDisk();
 }
+void cat(char* fileName)
+{
+	file_t file; 
+	int i = 0 ;
+	int size = getFileSize(fileName);
+	char* buffer = NULL;
+    file = openFile(fileName,R);
+    readFile(file,&buffer,size);
+    for(i=0;i<size-3;i++)
+    {
+		printf("%c",buffer[i]);
+	}
+    //closeFile(file);
+    printf("\n");
+    closeFile(file);
+   // printf("taille: %d",size);
+}
 
 /**
  * Gets a file from a link. A link correspond to a file if they used the same blocks.
@@ -1697,7 +1715,6 @@ void echo(char* text,char* destination) //Commande pour écrire une chaine de ca
     file = openFile(destination,W);
     writeFile(file,str,strlen(str));
     closeFile(file);
-    testContent();
 }
 
 void lsRights(char* fileName)

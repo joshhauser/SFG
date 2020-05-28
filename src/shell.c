@@ -6,27 +6,24 @@
 #include <string.h>
 
 /**
- * trucs a faire :
- * changer le prompt en fonction du repertoire :fait
- * vérifier le nombre d'arguemnts saisis.: fait
- * ls : marche toujours bizarre au niveau du type de fichier.
- * **/
-
-/**
  * tests:
  * mv: marche bien
- * ls: marche toujour chelou
+ * ls: marche bien
  * mkdir : marche bien 
  * rmdir : marche bien
  * touch : marche bien 
  * rm : marche bien 
- * move : marche bien mais les fichers dans le documents move a corriger
- * cd : marche bien (modification du prompt a ajouter)
+ * move : marche bien 
+ * cd : marche bien 
  * df : marche bien 
  * copy : marche bien
- * write : ? j'ai pas capté comment ça marche 
- * link et unlink pas encore fait
+ * lsall : marche bien ( a ajouter au man )
+ * lsR: marche bien (a ajouter au man)
+ * chmod: marche bien ( a ajouter au man ) 
+ * echo : marche bien ( a ajouter au man )
+ * link et unlink : non achevé
  * */
+
 
 /*get input containing spaces and tabs and store it in argval*/
 int getInput()
@@ -36,9 +33,6 @@ int getInput()
     input = NULL;
     unsigned int buf = 0 ;
     getline(&input,&buf,stdin);
-    // Copy into another string if we need to run special executables
-    input1 = (char *)malloc(strlen(input) * sizeof(char));
-    strncpy(input1,input,strlen(input));
     argcount = 0; 
     while((argval[argcount] = strsep(&input, " \t\n")) != NULL && argcount < ARGMAX-1)
     {
@@ -61,10 +55,14 @@ void screenfetch()
 
 void help()
 {
-    char* manstr = "\n |￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣|\n |  MAN:                                                      |\n |     mkdir <nomrepertoire> : creer un repertoire            |\n |     rmdir <nomrepertoire> : supprimer un repertoire        |\n |     touch <nomfichier> : creer un fichier      |\n |     cd <nomrepertoire> : changer le rep courant            |\n |     ls : liste des fichers                                 |\n |     mv source destination : déplacer un fichier            |\n |     rm <nomfichier> : supprimer un fichier                 |\n |     cp <source> <destination> : copier un fichier        |\n |     write <nomfichier> <texte> : ecrire dans un fichier    |\n |     df                                                     |\n |     exit                                                   |\n |＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿| \n(\\__/) ||\n(•ㅅ•) || \n/ 　 づ \n ";
-
-
+    char* manstr = "\n |￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣|\n |  MAN:                                                      |\n |     mkdir <nomrepertoire> : creer un repertoire            |\n |     rmdir <nomrepertoire> : supprimer un repertoire        |\n |     touch <nomfichier> : creer un fichier                  |\n |     cd <nomrepertoire> : changer le rep courant            |\n |     ls : liste des fichers                                 |\n |     lsall : liste tous les fichiers + date + droits        |\n |     lsR <fichier> : consulter les droits d'un fichier      |\n |     chmod <fichier> (+/-)droit (droit = r/w/rw)            |\n |     mv source destination : déplacer un fichier/repertoire |\n |     rm <nomfichier> : supprimer un fichier                 |\n |     cp <source> <destination> : copier un fichier          |\n |     echo texte > fichier : ecrire d:ans un fichier         |\n |     cat <fichier> : afficher le contenu d'un fichier       |\n |     df: consulter l'etat du disque                         |\n |     exit                                                   |\n |＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿| \n(\\__/) ||\n(•ㅅ•) || \n/ 　 づ \n ";
     printf("%s",manstr);
+}
+void exitscreen()
+{
+	printf("A bientot ! \n");
+	printf("  _   _\n \\_/-\\_/\n  )   (\n (     )\n  )   (\n /     \\ \n(   9   ) A BIENTOT !!\n(_\\_____/_)`by Josh,Sarra,Imane,Amine,Miriam\n"); 
+
 }
 
 void launch_shell(int argc, char* argv[])
@@ -97,7 +95,8 @@ void launch_shell(int argc, char* argv[])
         funcArgCount = getInput();
         if(strcmp(argval[0],"exit")==0 || strcmp(argval[0],"z")==0)
         {
-            printf("exit \n");
+			exitscreen();
+            //printf("exit \n");
             break;
         }
         else if(strcmp(argval[0],"help")==0)
@@ -146,14 +145,14 @@ void launch_shell(int argc, char* argv[])
         {
             mylsall();
         }
-	else if(strcmp(argval[0],"lsR")==0)
+	    else if(strcmp(argval[0],"lsR")==0)
         {
-	    lsRights(argval[1]);
+			lsRights(argval[1]);
         }
         else if (strcmp(argval[0],"chmod")==0)
         {
-	   chmod(argval[1],argval[2]);
-	}
+			chmod(argval[1],argval[2]);
+	    }
         else if(strcmp(argval[0],"mkdir")==0 )
         {
 			if ( funcArgCount != 2 )
@@ -242,6 +241,10 @@ void launch_shell(int argc, char* argv[])
 		    {
 				printf("+---- Error: saisir echo texte > destination\n");
 		    }
+		}
+		else if (strcmp(argval[0],"cat")==0 )
+		{
+			cat(argval[1]);
 		}
 		else if(strcmp(argval[0],"df")==0 )
 		{
