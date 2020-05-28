@@ -386,8 +386,7 @@ void removeFolder(char *folderName)
 
   // Number of items in the folder to delete
   int folderItemsCount;
-  // Items of the folder to delete
-  char **folderItems = splitStr(disk.blocks[folderInode.usedBlocks[0]], FOLDER_DELIMITER, &folderItemsCount);
+  splitStr(disk.blocks[folderInode.usedBlocks[0]], FOLDER_DELIMITER, &folderItemsCount);
 
   // Checks if the folder is empty: if it is, the only item should be the link to the parent directory
   if (folderItemsCount > 1)
