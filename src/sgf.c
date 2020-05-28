@@ -3,7 +3,7 @@
 #include <unistd.h>
 #include <string.h>
 #include <math.h>
-#include <time.h>
+#include <time.h> 
 
 #include "../headers/sgf.h"
 #include "../headers/functions.h"
@@ -1676,3 +1676,61 @@ void echo(char* text,char* destination) //Commande pour écrire une chaine de ca
     testContent();
 }
 
+void lsRights(char* fileName)
+{
+	char *currentFolderContent = getFileContent(currentFolderInode); 
+	int id = 0;	
+	inode_t inod;
+	int i = 0;
+	//on retrouve l'inode du fichier 
+	id = fileExists(fileName,'-',currentFolderContent);
+	if ( id != -1 )
+	{
+		inod = getInodeByID(id);
+		printf("%s : ",fileName);
+		for(i=0;i<3;i++)
+		{
+			printf("%c ", inod.rights[i]);
+		}
+		printf("\n");		
+	}
+}
+
+
+void chmod(char* fileName,char* droit)
+{
+	char *currentFolderContent = getFileContent(currentFolderInode);
+	int id = 0;	
+	//on retrouve l'inode du fichier 
+	id = fileExists(fileName,'-',currentFolderContent);
+	//on se place dans l'inode afin de la modifier
+	if ( id != -1)
+	{
+		if(strcmp(droit,"+r")==0)
+		{
+			disk.inodes[id].rights[1] = 'r'; 
+		}
+		else if(strcmp(droit,"-r")==0)
+		{
+			disk.inodes[id].rights[1] = '-'; 
+		}
+		else if(strcmp(droit,"+w")==0)
+		{
+			disk.inodes[id].rights[2] = 'w'; 
+		}
+		else if(strcmp(droit,"-w")==0)
+		{
+			disk.inodes[id].rights[2] = '-'; 
+		}
+		else if(strcmp(droit,"+rw")==0)
+		{
+			disk.inodes[id].rights[1] = '-'; 
+			disk.inodes[id].rights[2] = '-'; 
+		}
+		else if(strcmp(droit,"-rw")==0)
+		{
+			disk.inodes[id].rights[1] = '-';
+			disk.inodes[id].rights[2] = '-'; 
+		}
+	}
+}
