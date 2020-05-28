@@ -5,31 +5,12 @@
 #include <unistd.h>
 #include <string.h>
 
-/**
- * tests:
- * mv: marche bien
- * ls: marche bien
- * mkdir : marche bien 
- * rmdir : marche bien
- * touch : marche bien 
- * rm : marche bien 
- * move : marche bien 
- * cd : marche bien 
- * df : marche bien 
- * copy : marche bien
- * lsall : marche bien ( a ajouter au man )
- * lsR: marche bien (a ajouter au man)
- * chmod: marche bien ( a ajouter au man ) 
- * echo : marche bien ( a ajouter au man )
- * link et unlink : non achevé
- * */
 
-
-/*get input containing spaces and tabs and store it in argval*/
+// Gets input containing spaces & tabs and store it in argval
 int getInput()
 {
 	int argcount = 0;
-    fflush(stdout); // vider le buffer
+    fflush(stdout);
     input = NULL;
     unsigned int buf = 0 ;
     getline(&input,&buf,stdin);
@@ -46,45 +27,49 @@ int getInput()
     return argcount;
 }
 
-//message d'acceuil
+// Displays welcoming message
 void screenFetch()
 {
     char* welcomestr = "\n |￣￣￣￣￣￣￣￣|\n |  BIENVENUE     |\n | SUR MYSHELL    | \n |＿＿＿＿＿＿＿＿| \n(\\__/) ||\n(•ㅅ•) || \n/ 　 づ \n (saisir help afin de consulter le manuel) \n";
     printf("%s",welcomestr);
 }
 
+// Displays all the commands and how to use them
 void help()
 {
     char* manstr = "\n |￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣|\n |  MAN:                                                      |\n |     mkdir <nomrepertoire> : creer un repertoire            |\n |     rmdir <nomrepertoire> : supprimer un repertoire        |\n |     touch <nomfichier> : creer un fichier                  |\n |     cd <nomrepertoire> : changer le rep courant            |\n |     ls : liste des fichers                                 |\n |     lsall : liste tous les fichiers + date + droits        |\n |     lsR <fichier> : consulter les droits d'un fichier      |\n |     chmod <fichier> (+/-)droit (droit = r/w/rw)            |\n |     mv source destination : déplacer un fichier/repertoire |\n |     rm <nomfichier> : supprimer un fichier                 |\n |     cp <source> <destination> : copier un fichier          |\n |     echo texte > fichier : ecrire d:ans un fichier         |\n |     cat <fichier> : afficher le contenu d'un fichier       |\n |     df: consulter l'etat du disque                         |\n |     exit                                                   |\n |＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿| \n(\\__/) ||\n(•ㅅ•) || \n/ 　 づ \n ";
     printf("%s",manstr);
 }
+
+// Displays exit message
 void exitScreen()
 {
 	printf("A bientot ! \n");
-	printf("  _   _\n \\_/-\\_/\n  )   (\n (     )\n  )   (\n /     \\ \n(   9   ) A BIENTOT !!\n(_\\_____/_)`by Josh,Sarra,Imane,Amine,Miriam\n"); 
+	printf("  _   _\n \\_/-\\_/\n  )   (\n (     )\n  )   (\n /     \\ \n(   9   ) A BIENTOT !!\n(_\\_____/_)`by Josh, Sarra, Imane, Amine, Mariem\n"); 
 
 }
 
-void launchShell(int argc, char* argv[])
+// Launches the shell
+void launchShell()
 {
 	int exitflag = 0;
 	int i ;
 	int repcount=1;
 	char *prompt = malloc((100) * sizeof(char));
 	
-	//tableau qui va contenir le chemein vers le rep actuel
-	char** folder= NULL; 
+	
+	char** folder = NULL; 
 	folder = malloc(10 * sizeof(char*)); //10 lignes
-	for (i=0;i<10;i++)
+	for (i = 0; i < 10; i++)
 	{
-		folder[i]= malloc(20*sizeof(char));
-		folder[i]="";
+		folder[i] = malloc(20 * sizeof(char));
+		folder[i] = "";
 	}
-	folder[0]=MAIN_FOLDER;
-	strcpy(prompt,"");
-	strcat(prompt,"[ShellLite]:~$ ");
-	strcat(prompt,folder[0]);
-  strcat(prompt,"\0");
+	folder[0] = MAIN_FOLDER;
+	strcpy(prompt, "");
+	strcat(prompt, "[ShellLite]:~$ ");
+	strcat(prompt, folder[0]);
+  strcat(prompt, "\0");
     
 	int funcArgCount = 0;
 	

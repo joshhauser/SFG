@@ -8,6 +8,6 @@
 int main(int argc, char *argv[])
 {
   initDisk();
-  launchShell(argc, argv);
+  launchShell();
   return 0;
 }

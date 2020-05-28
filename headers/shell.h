@@ -17,6 +17,6 @@ int getInput();
 void help();
 void screenFetch();
 void exitScreen();
-void launchShell(int argc, char *argv[]);
+void launchShell();
 
 #endif
